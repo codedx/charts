@@ -10,10 +10,10 @@ keywords:
 - cluster
 name: minio
 home: https://min.io
-icon: https://bitnami.com/assets/stacks/minio/img/minio-stack-220x234.png
+icon: https://codedx.com/wp-content/uploads/2017/03/CodeDx-logo.png 
 sources:
-- https://github.com/bitnami/bitnami-docker-minio
+- https://github.com/codedx/charts 
 maintainers:
-- name: Bitnami
-  email: containers@bitnami.com
+- name: CodeDx
+  email: support@codedx.com 
 engine: gotpl
