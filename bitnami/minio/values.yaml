@@ -301,3 +301,13 @@ networkPolicy:
   ## (with the correct destination port).
   ##
   allowExternal: true
+
+## Non-Ingress TLS Settings for MinIO
+tls:
+  enabled: false
+  # Specifies the name of a k8s secret containing the certificate info used to configure
+  # MinIO TLS. Create the secret using a command similar to the following:
+  # kubectl create secret generic <cert-secret-name> --from-file=path/to/public.crt --from-file=path/to/private.key
+  certSecret: ""
+  publicCrt: public.crt
+  privateKey: private.key
