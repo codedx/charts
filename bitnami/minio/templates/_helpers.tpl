@@ -219,3 +219,15 @@ but Helm 2.9 and 2.10 does not support it, so we need to implement this if-else 
     {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Return the service account name
+*/}}
+{{- define "minio.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
+{{- default (include "minio.fullname" .) .Values.serviceAccount.name | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- default "default" .Values.serviceAccount.name -}}
+{{- end -}}
+{{- end -}}
+

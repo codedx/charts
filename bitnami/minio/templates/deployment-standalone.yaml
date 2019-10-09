@@ -64,6 +64,7 @@ spec:
         - name: data
           mountPath: {{ .Values.persistence.mountPath }}
       {{- end }}
+      serviceAccountName: {{ include "minio.serviceAccountName" . | quote }}
       containers:
       - name: "minio"
         image: {{ include "minio.image" . }}
