@@ -6,8 +6,8 @@ global:
   minio: {}
 #  minio:
 #    existingSecret: ""
-#    accessKey: ""
-#    secretKey: ""
+#    accessKeyGlobal: ""
+#    secretKeyGlobal: ""
 #  imageRegistry: myRegistryName
 #  imagePullSecrets:
 #    - myRegistryKeySecretName

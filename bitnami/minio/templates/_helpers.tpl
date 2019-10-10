@@ -68,7 +68,7 @@ imagePullSecrets:
 Return MinIO accessKey
 */}}
 {{- define "minio.accessKey" -}}
-{{- $accessKey := coalesce .Values.global.minio.accessKey .Values.accessKey.password -}}
+{{- $accessKey := coalesce .Values.global.minio.accessKeyGlobal .Values.accessKey.password -}}
 {{- if $accessKey }}
     {{- $accessKey -}}
 {{- else if (not .Values.accessKey.forcePassword) }}
@@ -82,7 +82,7 @@ Return MinIO accessKey
 Return MinIO secretKey
 */}}
 {{- define "minio.secretKey" -}}
-{{- $secretKey := coalesce .Values.global.minio.secretKey .Values.secretKey.password -}}
+{{- $secretKey := coalesce .Values.global.minio.secretKeyGlobal .Values.secretKey.password -}}
 {{- if $secretKey }}
     {{- $secretKey -}}
 {{- else if (not .Values.secretKey.forcePassword) }}
@@ -230,4 +230,3 @@ Return the service account name
 {{- default "default" .Values.serviceAccount.name -}}
 {{- end -}}
 {{- end -}}
-
