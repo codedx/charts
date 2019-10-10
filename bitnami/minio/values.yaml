@@ -98,7 +98,7 @@ statefulset:
 ## Mount MinIO secret as a file instead of passing environment variable
 ##
 useCredentialsFile: false
-accessKey:
+accessKeyLocal:
   ## MinIO Access Key
   ## ref: https://github.com/bitnami/bitnami-docker-minio/#setting-up-minio-in-distributed-mode
   ##
@@ -107,7 +107,7 @@ accessKey:
   ## If it is not force, a random password will be generated.
   ##
   forcePassword: false
-secretKey:
+secretKeyLocal:
   ## MinIO Secret Key
   ## ref: https://github.com/bitnami/bitnami-docker-minio/#setting-up-minio-in-distributed-mode
   ##

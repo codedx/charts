@@ -68,13 +68,13 @@ imagePullSecrets:
 Return MinIO accessKey
 */}}
 {{- define "minio.accessKey" -}}
-{{- $accessKey := coalesce .Values.global.minio.accessKeyGlobal .Values.accessKey.password -}}
+{{- $accessKey := coalesce .Values.global.minio.accessKeyGlobal .Values.accessKeyLocal.password -}}
 {{- if $accessKey }}
     {{- $accessKey -}}
-{{- else if (not .Values.accessKey.forcePassword) }}
+{{- else if (not .Values.accessKeyLocal.forcePassword) }}
     {{- randAlphaNum 10 -}}
 {{- else -}}
-    {{ required "An Access Key is required!" .Values.accessKey.password }}
+    {{ required "An Access Key is required!" .Values.accessKeyLocal.password }}
 {{- end -}}
 {{- end -}}
 
@@ -82,13 +82,13 @@ Return MinIO accessKey
 Return MinIO secretKey
 */}}
 {{- define "minio.secretKey" -}}
-{{- $secretKey := coalesce .Values.global.minio.secretKeyGlobal .Values.secretKey.password -}}
+{{- $secretKey := coalesce .Values.global.minio.secretKeyGlobal .Values.secretKeyLocal.password -}}
 {{- if $secretKey }}
     {{- $secretKey -}}
-{{- else if (not .Values.secretKey.forcePassword) }}
+{{- else if (not .Values.secretKeyLocal.forcePassword) }}
     {{- randAlphaNum 40 -}}
 {{- else -}}
-    {{ required "A Secret Key is required!" .Values.secretKey.password }}
+    {{ required "A Secret Key is required!" .Values.secretKeyLocal.password }}
 {{- end -}}
 {{- end -}}
 
