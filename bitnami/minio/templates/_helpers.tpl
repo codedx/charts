@@ -32,6 +32,24 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 {{/*
+Common labels
+*/}}
+{{- define "minio.labels" -}}
+app.kubernetes.io/name: {{ include "minio.name" . }}
+helm.sh/chart: {{ include "minio.chart" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
+
+{{/*
+Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
+*/}}
+{{- define "minio.matchLabels" -}}
+app.kubernetes.io/name: {{ include "minio.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+
+{{/*
 Return the proper MinIO image name
 */}}
 {{- define "minio.image" -}}
@@ -229,4 +247,16 @@ Return the service account name
 {{- else -}}
 {{- default "default" .Values.serviceAccount.name -}}
 {{- end -}}
+
+{{/*
+Renders a value that contains template.
+Usage:
+{{ include "minio.tplValue" ( dict "value" .Values.path.to.the.Value "context" $) }}
+*/}}
+{{- define "minio.tplValue" -}}
+    {{- if typeIs "string" .value }}
+        {{- tpl .value .context }}
+    {{- else }}
+        {{- tpl (.value | toYaml) .context }}
+    {{- end }}
 {{- end -}}

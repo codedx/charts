@@ -39,6 +39,24 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 {{/*
+Common labels
+*/}}
+{{- define "node.labels" -}}
+app: {{ include "node.name" . }}
+chart: {{ include "node.chart" . }}
+release: {{ .Release.Name }}
+heritage: {{ .Release.Service }}
+{{- end -}}
+
+{{/*
+Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
+*/}}
+{{- define "node.matchLabels" -}}
+app: {{ include "node.name" . }}
+release: {{ .Release.Name }}
+{{- end -}}
+
+{{/*
 Custom template to get proper service name
 */}}
 {{- define "node.secretName" -}}
@@ -68,7 +86,11 @@ Also, we can't use a single if because lazy evaluation is not an option
         {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
     {{- end -}}
 {{- else -}}
-    {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+    {{- if $registryName -}}
+        {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+    {{- else -}}
+        {{- printf "%s:%s" $repositoryName $tag -}}
+    {{- end -}}
 {{- end -}}
 {{- end -}}
 
@@ -91,7 +113,11 @@ Also, we can't use a single if because lazy evaluation is not an option
         {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
     {{- end -}}
 {{- else -}}
-    {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+    {{- if $registryName -}}
+        {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+    {{- else -}}
+        {{- printf "%s:%s" $repositoryName $tag -}}
+    {{- end -}}
 {{- end -}}
 {{- end -}}
 
@@ -167,7 +193,11 @@ Also, we can't use a single if because lazy evaluation is not an option
         {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
     {{- end -}}
 {{- else -}}
-    {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+    {{- if $registryName -}}
+        {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+    {{- else -}}
+        {{- printf "%s:%s" $repositoryName $tag -}}
+    {{- end -}}
 {{- end -}}
 {{- end -}}
 
@@ -204,4 +234,17 @@ but Helm 2.9 and 2.10 does not support it, so we need to implement this if-else 
         {{- end -}}
     {{- end -}}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Renders a value that contains template.
+Usage:
+{{ include "node.tplValue" (dict "value" .Values.path.to.the.Value "context" $) }}
+*/}}
+{{- define "node.tplValue" -}}
+    {{- if typeIs "string" .value }}
+        {{- tpl .value .context }}
+    {{- else }}
+        {{- tpl (.value | toYaml) .context }}
+    {{- end }}
 {{- end -}}

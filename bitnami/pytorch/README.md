@@ -6,7 +6,7 @@
 
 ```console
 $ helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm install bitnami/pytorch
+$ helm install my-release bitnami/pytorch
 ```
 
 ## Introduction
@@ -17,8 +17,10 @@ Bitnami charts can be used with [Kubeapps](https://kubeapps.com/) for deployment
 
 ## Prerequisites
 
-- Kubernetes 1.8+ with Beta APIs enabled
+- Kubernetes 1.12+
+- Helm 2.11+ or Helm 3.0-beta3+
 - PV provisioner support in the underlying infrastructure
+- ReadWriteMany volumes for deployment scaling
 
 ## Installing the Chart
 
@@ -26,10 +28,10 @@ To install the chart with the release name `my-release`:
 
 ```console
 $ helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm install --name my-release bitnami/pytorch
+$ helm install my-release bitnami/pytorch
 ```
 
-These commands deploy PyTorch on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured.
+These commands deploy PyTorch on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured.
 
 > **Tip**: List all releases using `helm list`
 
@@ -43,7 +45,7 @@ $ helm delete my-release
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
 
-## Configuration
+## Parameters
 
 The following table lists the configurable parameters of the MinIO chart and their default values.
 
@@ -68,7 +70,7 @@ The following table lists the configurable parameters of the MinIO chart and the
 | `volumePermissions.enabled`          | Enable init container that changes volume permissions in the data directory (for cases where the default k8s `runAsUser` and `fsUser` values do not work) | `false`                                                 |
 | `volumePermissions.image.registry`   | Init container volume-permissions image registry                                                                                                          | `docker.io`                                             |
 | `volumePermissions.image.repository` | Init container volume-permissions image name                                                                                                              | `bitnami/minideb`                                       |
-| `volumePermissions.image.tag`        | Init container volume-permissions image tag                                                                                                               | `stretch`                                                |
+| `volumePermissions.image.tag`        | Init container volume-permissions image tag                                                                                                               | `buster`                                                 |
 | `volumePermissions.image.pullPolicy` | Init container volume-permissions image pull policy                                                                                                       | `Always`                                                |
 | `volumePermissions.resources`        | Init container resource requests/limit                                                                                                                    | `nil`                                                   |
 | service.type                         | Kubernetes service type                                                                                                                                   | `ClusterIP`                                             |
@@ -111,7 +113,7 @@ The following table lists the configurable parameters of the MinIO chart and the
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```console
-$ helm install --name my-release \
+$ helm install my-release \
   --set mode=distributed \
   --set worldSize=4 \
     bitnami/pytorch
@@ -122,18 +124,22 @@ The above command create 4 pods for PyTorch: one master and three workers.
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
 ```console
-$ helm install --name my-release -f values.yaml bitnami/pytorch
+$ helm install my-release -f values.yaml bitnami/pytorch
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
 
+## Configuration and installation details
+
+### [Rolling VS Immutable tags](https://docs.bitnami.com/containers/how-to/understand-rolling-tags-containers/)
+
+It is strongly recommended to use immutable tags in a production environment. This ensures your deployment does not change automatically if the same tag is updated with a different image.
+
+Bitnami will release a new chart updating its containers if a new version of the main container, significant changes, or critical vulnerabilities exist.
+
 ### Production configuration
 
-This chart includes a `values-production.yaml` file where you can find some parameters oriented to production configuration in comparison to the regular `values.yaml`.
-
-```console
-$ helm install --name my-release -f ./values-production.yaml bitnami/pytorch
-```
+This chart includes a `values-production.yaml` file where you can find some parameters oriented to production configuration in comparison to the regular `values.yaml`. You can use this file instead of the default one.
 
 - Run PyTorch in distributed mode:
 ```diff
@@ -147,13 +153,7 @@ $ helm install --name my-release -f ./values-production.yaml bitnami/pytorch
 + worldSize: 4
 ```
 
-### [Rolling VS Immutable tags](https://docs.bitnami.com/containers/how-to/understand-rolling-tags-containers/)
-
-It is strongly recommended to use immutable tags in a production environment. This ensures your deployment does not change automatically if the same tag is updated with a different image.
-
-Bitnami will release a new chart updating its containers if a new version of the main container, significant changes, or critical vulnerabilities exist.
-
-## Loading your files
+### Loading your files
 
 The PyTorch chart supports three different ways to load your files. In order of priority, they are:
 
@@ -163,29 +163,16 @@ The PyTorch chart supports three different ways to load your files. In order of 
 
 This means that if you specify a config map with your files, it won't look for the `files/` directory nor the git repository.
 
-In order to use use an existing config map:
+In order to use use an existing config map, set the `configMap=my-config-map` parameter.
+
+To load your files from the `files/` directory you don't have to set any option. Just copy your files inside and don't specify a `ConfigMap`.
+
+Finally, if you want to clone a git repository you can use those parameters:
 
 ```console
-$ helm install --name my-release \
-  --set configMap=my-config-map \
-  bitnami/pytorch
-```
-
-To load your files from the `files/` directory you don't have to set any option. Just copy your files inside and don't specify a `ConfigMap`:
-
-```console
-$ helm install --name my-release \
-  bitnami/pytorch
-```
-
-Finally, if you want to clone a git repository:
-
-```console
-$ helm install --name my-release \
-  --set cloneFilesFromGit.enabled=true \
-  --set cloneFilesFromGit.repository=https://github.com/my-user/my-repo \
-  --set cloneFilesFromGit.revision=master \
-  bitnami/pytorch
+cloneFilesFromGit.enabled=true
+cloneFilesFromGit.repository=https://github.com/my-user/my-repo
+cloneFilesFromGit.revision=master
 ```
 
 ## Persistence

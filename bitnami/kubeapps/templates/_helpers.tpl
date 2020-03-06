@@ -25,6 +25,31 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 
 {{/*
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "kubeapps.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Common labels
+*/}}
+{{- define "kubeapps.labels" -}}
+app: {{ include "kubeapps.name" . }}
+chart: {{ include "kubeapps.chart" . }}
+release: {{ .Release.Name }}
+heritage: {{ .Release.Service }}
+{{- end -}}
+
+{{/*
+Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
+*/}}
+{{- define "kubeapps.matchLabels" -}}
+app: {{ include "kubeapps.name" . }}
+release: {{ .Release.Name }}
+{{- end -}}
+
+{{/*
 Render image reference
 */}}
 {{- define "kubeapps.image" -}}
@@ -55,11 +80,14 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+
 {{/*
-Create chart name and version as used by the chart label.
+Create a default fully qualified app name for PostgreSQL dependency.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
-{{- define "kubeapps.chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+{{- define "kubeapps.postgresql.fullname" -}}
+{{- $name := default "postgresql" .Values.postgresql.nameOverride -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
@@ -70,10 +98,10 @@ Create name for the apprepository-controller based on the fullname
 {{- end -}}
 
 {{/*
-Create name for the apprepository bootstrap job
+Create name for the apprepository pre-upgrade job
 */}}
-{{- define "kubeapps.apprepository-jobs-bootstrap.fullname" -}}
-{{ template "kubeapps.fullname" . }}-internal-apprepository-jobs-bootstrap
+{{- define "kubeapps.apprepository-jobs-preupgrade.fullname" -}}
+{{ template "kubeapps.fullname" . }}-internal-apprepository-jobs-preupgrade
 {{- end -}}
 
 {{/*
@@ -84,10 +112,10 @@ Create name for the apprepository cleanup job
 {{- end -}}
 
 {{/*
-Create name for the mongodb secret bootstrap job
+Create name for the db-secret secret bootstrap job
 */}}
-{{- define "kubeapps.mongodb-jobs-cleanup.fullname" -}}
-{{ template "kubeapps.fullname" . }}-internal-mongodb-jobs-cleanup
+{{- define "kubeapps.db-secret-jobs-cleanup.fullname" -}}
+{{ template "kubeapps.fullname" . }}-internal-db-secret-jobs-cleanup
 {{- end -}}
 
 {{/*
@@ -98,10 +126,10 @@ Create name for the kubeapps upgrade job
 {{- end -}}
 
 {{/*
-Create name for the chartsvc based on the fullname
+Create name for the assetsvc based on the fullname
 */}}
-{{- define "kubeapps.chartsvc.fullname" -}}
-{{ template "kubeapps.fullname" . }}-internal-chartsvc
+{{- define "kubeapps.assetsvc.fullname" -}}
+{{ template "kubeapps.fullname" . }}-internal-assetsvc
 {{- end -}}
 
 {{/*
@@ -126,10 +154,28 @@ Create name for the frontend config based on the fullname
 {{- end -}}
 
 {{/*
+Create proxy_pass for the frontend config based on the useHelm3 flag
+*/}}
+{{- define "kubeapps.frontend-config.proxy_pass" -}}
+{{- if .Values.useHelm3 -}}
+http://{{ template "kubeapps.kubeops.fullname" . }}:{{ .Values.kubeops.service.port }}
+{{- else -}}
+http://{{ template "kubeapps.tiller-proxy.fullname" . }}:{{ .Values.tillerProxy.service.port }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Create name for the tiller-proxy based on the fullname
 */}}
 {{- define "kubeapps.tiller-proxy.fullname" -}}
 {{ template "kubeapps.fullname" . }}-internal-tiller-proxy
+{{- end -}}
+
+{{/*
+Create name for kubeops based on the fullname
+*/}}
+{{- define "kubeapps.kubeops.fullname" -}}
+{{ template "kubeapps.fullname" . }}-internal-kubeops
 {{- end -}}
 
 {{/*
@@ -176,4 +222,17 @@ imagePullSecrets:
 {{- end }}
 {{- end -}}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Renders a value that contains template.
+Usage:
+{{ include "kubeapps.tplValue" ( dict "value" .Values.path.to.the.Value "context" $) }}
+*/}}
+{{- define "kubeapps.tplValue" -}}
+    {{- if typeIs "string" .value }}
+        {{- tpl .value .context }}
+    {{- else }}
+        {{- tpl (.value | toYaml) .context }}
+    {{- end }}
 {{- end -}}

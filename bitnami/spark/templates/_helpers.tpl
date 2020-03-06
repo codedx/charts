@@ -48,11 +48,37 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 {{- end -}}
 
+{{- /* 
+As we use a headless service we need to append -master-svc to 
+the service name. 
+*/ -}}
+{{- define "spark.master.service.name" -}}
+{{ include "spark.fullname" . }}-master-svc
+{{- end -}}
+
 {{- /*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "spark.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+Common labels
+*/}}
+{{- define "spark.labels" -}}
+app.kubernetes.io/name: {{ include "spark.name" . }}
+helm.sh/chart: {{ include "spark.chart" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
+
+{{/*
+Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
+*/}}
+{{- define "spark.matchLabels" -}}
+app.kubernetes.io/name: {{ include "spark.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{- define "spark.imagePullSecrets" -}}
@@ -81,11 +107,22 @@ imagePullSecrets:
 {{- end -}}
 {{- end -}}
 
+{{/* Validate values of Spark - Incorrect extra volume settings */}}
+{{- define "spark.validateValues.extraVolumes" -}}
+{{- if and (.Values.worker.extraVolumes) (not .Values.worker.extraVolumeMounts) -}}
+spark: missing-worker-extra-volume-mounts
+    You specified worker extra volumes but no mount points for them. Please set
+    the extraVolumeMounts value
+{{- end -}}
+{{- end -}}
+
+
 {{/*
 Compile all warnings into a single message, and call fail.
 */}}
 {{- define "spark.validateValues" -}}
 {{- $messages := list -}}
+{{- $messages := append $messages (include "spark.validateValues.extraVolumes" .) -}}
 {{- $messages := append $messages (include "spark.validateValues.workerCount" .) -}}
 {{- $messages := without $messages "" -}}
 {{- $message := join "\n" $messages -}}
@@ -121,4 +158,17 @@ spark: workerCount
 WARNING: Rolling tag detected ({{ .Values.image.repository }}:{{ .Values.image.tag }}), please note that it is strongly recommended to avoid using rolling tags in a production environment.
 +info https://docs.bitnami.com/containers/how-to/understand-rolling-tags-containers/
 {{- end -}}
+{{- end -}}
+
+{{/*
+Renders a value that contains template.
+Usage:
+{{ include "spark.tplValue" (dict "value" .Values.path.to.the.Value "context" $) }}
+*/}}
+{{- define "spark.tplValue" -}}
+    {{- if typeIs "string" .value }}
+        {{- tpl .value .context }}
+    {{- else }}
+        {{- tpl (.value | toYaml) .context }}
+    {{- end }}
 {{- end -}}

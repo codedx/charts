@@ -32,6 +32,17 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 {{/*
+ Create the name of the service account to use
+ */}}
+{{- define "zookeeper.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
+    {{ default (include "zookeeper.fullname" .) .Values.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Return the proper Zookeeper image name
 */}}
 {{- define "zookeeper.image" -}}
@@ -116,6 +127,37 @@ imagePullSecrets:
   - name: {{ . }}
 {{- end }}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Common labels
+*/}}
+{{- define "zookeeper.labels" -}}
+app.kubernetes.io/name: {{ include "zookeeper.name" . }}
+helm.sh/chart: {{ include "zookeeper.chart" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
+
+{{/*
+Renders a value that contains template.
+Usage:
+{{ include "zookeeper.tplValue" ( dict "value" .Values.path.to.the.Value "context" $) }}
+*/}}
+{{- define "zookeeper.tplValue" -}}
+    {{- if typeIs "string" .value }}
+        {{- tpl .value .context }}
+    {{- else }}
+        {{- tpl (.value | toYaml) .context }}
+    {{- end }}
+{{- end -}}
+
+{{/*
+Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
+*/}}
+{{- define "zookeeper.matchLabels" -}}
+app.kubernetes.io/name: {{ include "zookeeper.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*

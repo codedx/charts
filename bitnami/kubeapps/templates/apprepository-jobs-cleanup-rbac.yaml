@@ -1,5 +1,5 @@
 {{- if .Values.rbac.create -}}
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: {{ template "kubeapps.apprepository-jobs-cleanup.fullname" . }}
@@ -13,22 +13,22 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 rules:
-- apiGroups:
-  - kubeapps.com
-  resources:
-  - apprepositories
-  verbs:
-  - list
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - list
-  - delete
+  - apiGroups:
+      - kubeapps.com
+    resources:
+      - apprepositories
+    verbs:
+      - list
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - list
+      - delete
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: {{ template "kubeapps.apprepository-jobs-cleanup.fullname" . }}
@@ -46,7 +46,7 @@ roleRef:
   kind: Role
   name: {{ template "kubeapps.apprepository-jobs-cleanup.fullname" . }}
 subjects:
-- kind: ServiceAccount
-  name: {{ template "kubeapps.apprepository-jobs-cleanup.fullname" . }}
-  namespace: {{ .Release.Namespace }}
+  - kind: ServiceAccount
+    name: {{ template "kubeapps.apprepository-jobs-cleanup.fullname" . }}
+    namespace: {{ .Release.Namespace }}
 {{- end -}}

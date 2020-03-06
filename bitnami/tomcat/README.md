@@ -6,7 +6,7 @@
 
 ```console
 $ helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm install bitnami/tomcat
+$ helm install my-release bitnami/tomcat
 ```
 
 ## Introduction
@@ -17,8 +17,10 @@ Bitnami charts can be used with [Kubeapps](https://kubeapps.com/) for deployment
 
 ## Prerequisites
 
-- Kubernetes 1.4+ with Beta APIs enabled
+- Kubernetes 1.12+
+- Helm 2.11+ or Helm 3.0-beta3+
 - PV provisioner support in the underlying infrastructure
+- ReadWriteMany volumes for deployment scaling
 
 ## Installing the Chart
 
@@ -26,10 +28,10 @@ To install the chart with the release name `my-release`:
 
 ```console
 $ helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm install --name my-release bitnami/tomcat
+$ helm install my-release bitnami/tomcat
 ```
 
-These commands deploy Tomcat on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
+These commands deploy Tomcat on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
 > **Tip**: List all releases using `helm list`
 
@@ -43,57 +45,65 @@ $ helm delete my-release
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
 
-## Configuration
+## Parameters
 
 The following tables lists the configurable parameters of the Tomcat chart and their default values.
 
-| Parameter                            | Description                                                                                                                                               | Default                                                 |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `global.imageRegistry`               | Global Docker image registry                                                                                                                              | `nil`                                                   |
-| `global.imagePullSecrets`            | Global Docker registry secret names as an array                                                                                                           | `[]` (does not add image pull secrets to deployed pods) |
-| `global.storageClass`                | Global storage class for dynamic provisioning                                                                                                             | `nil`                                                   |
-| `image.registry`                     | Tomcat image registry                                                                                                                                     | `docker.io`                                             |
-| `image.repository`                   | Tomcat Image name                                                                                                                                         | `bitnami/tomcat`                                        |
-| `image.tag`                          | Tomcat Image tag                                                                                                                                          | `{TAG_NAME}`                                            |
-| `image.pullPolicy`                   | Tomcat image pull policy                                                                                                                                  | `IfNotPresent`                                          |
-| `image.pullSecrets`                  | Specify docker-registry secret names as an array                                                                                                          | `[]` (does not add image pull secrets to deployed pods) |
-| `nameOverride`                       | String to partially override tomcat.fullname template with a string (will prepend the release name)                                                       | `nil`                                                   |
-| `fullnameOverride`                   | String to fully override tomcat.fullname template with a string                                                                                           | `nil`                                                   |
-| `volumePermissions.enabled`          | Enable init container that changes volume permissions in the data directory (for cases where the default k8s `runAsUser` and `fsUser` values do not work) | `false`                                                 |
-| `volumePermissions.image.registry`   | Init container volume-permissions image registry                                                                                                          | `docker.io`                                             |
-| `volumePermissions.image.repository` | Init container volume-permissions image name                                                                                                              | `bitnami/minideb`                                       |
-| `volumePermissions.image.tag`        | Init container volume-permissions image tag                                                                                                               | `stretch`                                               |
-| `volumePermissions.image.pullPolicy` | Init container volume-permissions image pull policy                                                                                                       | `Always`                                                |
-| `volumePermissions.resources`        | Init container resource requests/limit                                                                                                                    | `nil`                                                   |
-| `tomcatUsername`                     | Tomcat admin user                                                                                                                                         | `user`                                                  |
-| `tomcatPassword`                     | Tomcat admin password                                                                                                                                     | _random 10 character alphanumeric string_               |
-| `tomcatAllowRemoteManagement`        | Enable remote access to management interface                                                                                                              | `0` (disabled)                                          |
-| `securityContext.enabled`            | Enable security context                                                                                                                                   | `true`                                                  |
-| `securityContext.fsGroup`            | Group ID for the container                                                                                                                                | `1001`                                                  |
-| `securityContext.runAsUser`          | User ID for the container                                                                                                                                 | `1001`                                                  |
-| `service.type`                       | Kubernetes Service type                                                                                                                                   | `LoadBalancer`                                          |
-| `service.port`                       | Service HTTP port                                                                                                                                         | `80`                                                    |
-| `service.nodePorts.http`             | Kubernetes http node port                                                                                                                                 | `""`                                                    |
-| `service.externalTrafficPolicy`      | Enable client source IP preservation                                                                                                                      | `Cluster`                                               |
-| `service.loadBalancerIP`             | LoadBalancer service IP address                                                                                                                           | `""`                                                    |
-| `persistence.enabled`                | Enable persistence using PVC                                                                                                                              | `true`                                                  |
-| `persistence.storageClass`           | PVC Storage Class for Tomcat volume                                                                                                                       | `nil` (uses alpha storage class annotation)             |
-| `persistence.accessMode`             | PVC Access Mode for Tomcat volume                                                                                                                         | `ReadWriteOnce`                                         |
-| `persistence.size`                   | PVC Storage Request for Tomcat volume                                                                                                                     | `8Gi`                                                   |
-| `resources`                          | CPU/Memory resource requests/limits                                                                                                                       | Memory: `512Mi`, CPU: `300m`                            |
-| `ingress.enabled`                    | Enable the ingress controller                                                                                                                             | `false`                                                 |
-| `ingress.certManager`                | Add annotations for certManager                                                                                                                           | `false`                                                 |
-| `ingress.annotations`                | Annotations to set in the ingress controller                                                                                                              | -                                                       |
-| `ingress.hosts`                      | List of hostnames to be covered with the ingress                                                                                                          | `tomcat.local`                                          |
-| `ingress.tls`                        | List with TLS configuration for the ingress                                                                                                               | `hosts: tomcat.local, secretName: tomcat.local-tls`     |
-| `affinity`                           | Map of node/pod affinities                                                                                                                                | `{}`                                                    |
+|              Parameter               |                                             Description                                             |                         Default                         |
+|--------------------------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------|
+| `global.imageRegistry`               | Global Docker image registry                                                                        | `nil`                                                   |
+| `global.imagePullSecrets`            | Global Docker registry secret names as an array                                                     | `[]` (does not add image pull secrets to deployed pods) |
+| `global.storageClass`                | Global storage class for dynamic provisioning                                                       | `nil`                                                   |
+| `image.registry`                     | Tomcat image registry                                                                               | `docker.io`                                             |
+| `image.repository`                   | Tomcat Image name                                                                                   | `bitnami/tomcat`                                        |
+| `image.tag`                          | Tomcat Image tag                                                                                    | `{TAG_NAME}`                                            |
+| `image.pullPolicy`                   | Tomcat image pull policy                                                                            | `IfNotPresent`                                          |
+| `image.pullSecrets`                  | Specify docker-registry secret names as an array                                                    | `[]` (does not add image pull secrets to deployed pods) |
+| `volumePermissions.enabled`          | Enable init container that changes volume permissions in the data directory                         | `false`                                                 |
+| `volumePermissions.image.registry`   | Init container volume-permissions image registry                                                    | `docker.io`                                             |
+| `volumePermissions.image.repository` | Init container volume-permissions image name                                                        | `bitnami/minideb`                                       |
+| `volumePermissions.image.tag`        | Init container volume-permissions image tag                                                         | `buster`                                                |
+| `volumePermissions.image.pullPolicy` | Init container volume-permissions image pull policy                                                 | `Always`                                                |
+| `volumePermissions.resources`        | Init container resource requests/limit                                                              | `{}`                                                    |
+| `nameOverride`                       | String to partially override tomcat.fullname template with a string (will prepend the release name) | `nil`                                                   |
+| `fullnameOverride`                   | String to fully override tomcat.fullname template with a string                                     | `nil`                                                   |
+| `updateStrategy`                     | Set to Recreate if you use persistent volume that cannot be mounted by more than one pods           | `RollingUpdate`                                         |
+| `tomcatUsername`                     | Tomcat admin user                                                                                   | `user`                                                  |
+| `tomcatPassword`                     | Tomcat admin password                                                                               | _random 10 character alphanumeric string_               |
+| `tomcatAllowRemoteManagement`        | Enable remote access to management interface                                                        | `0` (disabled)                                          |
+| `podAnnotations`                     | Pod annotations                                                                                     | `{}`                                                    |
+| `affinity`                           | Map of node/pod affinities                                                                          | `{}` (The value is evaluated as a template)             |
+| `nodeSelector`                       | Node labels for pod assignment                                                                      | `{}` (The value is evaluated as a template)             |
+| `tolerations`                        | Tolerations for pod assignment                                                                      | `[]` (The value is evaluated as a template)             |
+| `securityContext.enabled`            | Enable security context                                                                             | `true`                                                  |
+| `securityContext.fsGroup`            | Group ID for the container                                                                          | `1001`                                                  |
+| `securityContext.runAsUser`          | User ID for the container                                                                           | `1001`                                                  |
+| `resources`                          | CPU/Memory resource requests/limits                                                                 | `{"requests": {"Memory": "512Mi", CPU: "300m"}}`        |
+| `persistence.enabled`                | Enable persistence using PVC                                                                        | `true`                                                  |
+| `persistence.storageClass`           | PVC Storage Class for Tomcat volume                                                                 | `nil` (uses alpha storage class annotation)             |
+| `persistence.accessMode`             | PVC Access Mode for Tomcat volume                                                                   | `ReadWriteOnce`                                         |
+| `persistence.size`                   | PVC Storage Request for Tomcat volume                                                               | `8Gi`                                                   |
+| `service.type`                       | Kubernetes Service type                                                                             | `LoadBalancer`                                          |
+| `service.port`                       | Service HTTP port                                                                                   | `80`                                                    |
+| `service.nodePort`                   | Kubernetes http node port                                                                           | `""`                                                    |
+| `service.externalTrafficPolicy`      | Enable client source IP preservation                                                                | `Cluster`                                               |
+| `service.loadBalancerIP`             | LoadBalancer service IP address                                                                     | `""`                                                    |
+| `service.annotations`                | Service annotations                                                                                 | `{}`                                                    |
+| `ingress.enabled`                    | Enable the ingress controller                                                                       | `false`                                                 |
+| `ingress.certManager`                | Add annotations for certManager                                                                     | `false`                                                 |
+| `ingress.annotations`                | Annotations to set in the ingress controller                                                        | `{}`                                                    |
+| `ingress.hosts[0].name`              | Hostname to your opencart installation                                                              | `tomcat.local`                                          |
+| `ingress.hosts[0].path`              | Path within the url structure                                                                       | `/`                                                     |
+| `ingress.hosts[0].tls`               | Utilize TLS backend in ingress                                                                      | `false`                                                 |
+| `ingress.hosts[0].tlsHosts`          | Array of TLS hosts for ingress record (defaults to `ingress.hosts[0].name` if `nil`)                | `nil`                                                   |
+| `ingress.hosts[0].tlsSecret`         | TLS Secret (certificates)                                                                           | `tomcat.local-tls`                                      |
 
 The above parameters map to the env variables defined in [bitnami/tomcat](http://github.com/bitnami/bitnami-docker-tomcat). For more information please refer to the [bitnami/tomcat](http://github.com/bitnami/bitnami-docker-tomcat) image documentation.
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```console
-$ helm install --name my-release \
+$ helm install my-release \
   --set tomcatUser=manager,tomcatPassword=password bitnami/tomcat
 ```
 
@@ -102,10 +112,12 @@ The above command sets the Tomcat management username and password to `manager` 
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
 ```console
-$ helm install --name my-release -f values.yaml bitnami/tomcat
+$ helm install my-release -f values.yaml bitnami/tomcat
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
+
+## Configuration and installation details
 
 ### [Rolling VS Immutable tags](https://docs.bitnami.com/containers/how-to/understand-rolling-tags-containers/)
 
@@ -118,7 +130,7 @@ Bitnami will release a new chart updating its containers if a new version of the
 The [Bitnami Tomcat](https://github.com/bitnami/bitnami-docker-tomcat) image stores the Tomcat data and configurations at the `/bitnami/tomcat` path of the container.
 
 Persistent Volume Claims are used to keep the data across deployments. This is known to work in GCE, AWS, and minikube.
-See the [Configuration](#configuration) section to configure the PVC or to disable persistence.
+See the [Parameters](#parameters) section to configure the PVC or to disable persistence.
 
 ### Adjust permissions of persistent volume mountpoint
 
@@ -142,13 +154,13 @@ This release updates the Bitnami Tomcat container to `9.0.26-debian-9-r0`, which
 Tomcat container was moved to a non-root approach. There shouldn't be any issue when upgrading since the corresponding `securityContext` is enabled by default. Both the container image and the chart can be upgraded by running the command below:
 
 ```
-$ helm upgrade my-release stable/tomcat
+$ helm upgrade my-release bitnami/tomcat
 ```
 
 If you use a previous container image (previous to **8.5.35-r26**) disable the `securityContext` by running the command below:
 
 ```
-$ helm upgrade my-release stable/tomcat --set securityContext.enabled=fase,image.tag=XXX
+$ helm upgrade my-release bitnami/tomcat --set securityContext.enabled=fase,image.tag=XXX
 ```
 
 ### To 1.0.0

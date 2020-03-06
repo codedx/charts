@@ -6,7 +6,7 @@
 
 ```bash
 $ helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm install bitnami/nginx-ingress-controller
+$ helm install my-release bitnami/nginx-ingress-controller
 ```
 
 ## Introduction
@@ -19,7 +19,8 @@ Bitnami charts can be used with [Kubeapps](https://kubeapps.com/) for deployment
 
 ## Prerequisites
 
-- Kubernetes 1.6+
+- Kubernetes 1.12+
+- Helm 2.11+ or Helm 3.0-beta3+
 
 ## Installing the Chart
 
@@ -27,7 +28,7 @@ To install the chart with the release name `my-release`:
 
 ```bash
 $ helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm install --name my-release bitnami/nginx-ingress-controller
+$ helm install my-release bitnami/nginx-ingress-controller
 ```
 
 These commands deploy nginx-ingress-controller on the Kubernetes cluster in the default configuration.
@@ -44,7 +45,7 @@ $ helm delete my-release
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
 
-## Configuration
+## Parameters
 
 The following tables lists the configurable parameters of the nginx-ingress-controller chart and their default values.
 
@@ -104,10 +105,6 @@ Parameter | Description | Default
 `service.healthCheckNodePort` | If `service.type` is `NodePort` or `LoadBalancer` and `service.externalTrafficPolicy` is set to `Local`, set this to [the managed health-check port the kube-proxy will expose](https://kubernetes.io/docs/tutorials/services/source-ip/#source-ip-for-services-with-typenodeport). If blank, a random port in the `NodePort` range will be assigned | `""`
 `service.loadBalancerIP` | IP address to assign to load balancer (if supported) | `""`
 `service.loadBalancerSourceRanges` | List of IP CIDRs allowed access to load balancer (if supported) | `[]`
-`service.enableHttp` | If port 80 should be opened for service | `true`
-`service.enableHttps` | If port 443 should be opened for service | `true`
-`service.targetPorts.http` | Sets the targetPort that maps to the Ingress' port 80 | `80`
-`service.targetPorts.https` | Sets the targetPort that maps to the Ingress' port 443 | `443`
 `service.ports.http` | Sets service http port | `80`
 `service.ports.https` | Sets service https port | `443`
 `service.type` | Type of controller service to create | `LoadBalancer`
@@ -129,17 +126,13 @@ Parameter | Description | Default
 `readinessProbe.port` | The port number that the readiness probe will listen on. | 10254
 `metrics.enabled` | If `true`, enable Prometheus metrics (`stats.enabled` must be `true` as well) | `false`
 `metrics.service.annotations` | Annotations for Prometheus metrics service | `{}`
-`metrics.service.clusterIP` | Cluster IP address to assign to service | `""`
-`metrics.service.omitClusterIP` | To omit the `ClusterIP` from the metrics service | `false`
-`metrics.service.externalIPs` | Prometheus metrics service external IP addresses | `[]`
-`metrics.service.loadBalancerIP` | IP address to assign to load balancer (if supported) | `""`
-`metrics.service.loadBalancerSourceRanges` | List of IP CIDRs allowed access to load balancer (if supported) | `[]`
 `metrics.service.port` | Prometheus metrics service port | `9913`
 `metrics.service.type` | Type of Prometheus metrics service to create | `ClusterIP`
 `metrics.serviceMonitor.enabled` | Set this to `true` to create ServiceMonitor for Prometheus operator | `false`
 `metrics.serviceMonitor.additionalLabels` | Additional labels that can be used so ServiceMonitor will be discovered by Prometheus | `{}`
 `metrics.serviceMonitor.namespace` | namespace where servicemonitor resource should be created | `the same namespace as nginx ingress`
 `metrics.serviceMonitor.honorLabels` | honorLabels chooses the metric's labels on collisions with target labels. | `false`
+`metrics.serviceMonitor.metricRelabelings` | metricRelabelings which should be applied to the ServiceMonitor. | `[]`
 `metrics.prometheusRule.enabled` | Set this to `true` to create prometheusRules for Prometheus operator | `false`
 `metrics.prometheusRule.additionalLabels` | Additional labels that can be used so prometheusRules will be discovered by Prometheus | `{}`
 `metrics.prometheusRule.namespace` | Namespace where prometheusRules resource should be created | `the same namespace as nginx ingress`
@@ -152,6 +145,7 @@ Parameter | Description | Default
 `configMapNamespace` | The nginx-configmap namespace name | `""`
 `tcpConfigMapNamespace` | The tcp-services-configmap namespace name | `""`
 `udpConfigMapNamespace` | The udp-services-configmap namespace name | `""`
+`maxmindLicenseKey` | Maxmind license key to download GeoLite2 Databases. See [Accessing and using GeoLite2 database](https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/) | `""`
 `defaultBackend.enabled` | If false, defaultBackendService must be provided | `true`
 `defaultBackend.name` | Name of the default backend component | `default-backend`
 `defaultBackend.image.repository` | Default backend container image repository | `k8s.gcr.io/defaultbackend`
@@ -167,13 +161,8 @@ Parameter | Description | Default
 `defaultBackend.replicaCount` | Desired number of default backend pods | `1`
 `defaultBackend.minAvailable` | Minimum number of available default backend pods for PodDisruptionBudget | `1`
 `defaultBackend.resources` | Default backend pod resource requests & limits | `{}`
-`defaultBackend.priorityClassName` | Default backend  priorityClassName | `nil`
-`defaultBackend.service.annotations` | Annotations for default backend service | `{}`
-`defaultBackend.service.clusterIP` | Internal default backend cluster service IP | `""`
-`defaultBackend.service.externalIPs` | Default backend service external IP addresses | `[]`
-`defaultBackend.service.loadBalancerIP` | IP address to assign to load balancer (if supported) | `""`
-`defaultBackend.service.loadBalancerSourceRanges` | List of IP CIDRs allowed access to load balancer (if supported) | `[]`
 `defaultBackend.service.type` | Type of default backend service to create | `ClusterIP`
+`defaultBackend.service.port` | Sets backend service port | `80`
 `imagePullSecrets` | Name of Secret resource containing private registry credentials | `nil`
 `rbac.create` | If `true`, create & use RBAC resources | `true`
 `securityContext.fsGroup` |	Group ID for the container	| `1001`
@@ -188,7 +177,7 @@ Parameter | Description | Default
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```bash
-$ helm install --name my-release \
+$ helm install my-release \
     --set image.pullPolicy=Always \
     bitnami/nginx-ingress-controller
 ```
@@ -198,36 +187,41 @@ The above command sets the `image.pullPolicy` to `Always`.
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
 ```bash
-$ helm install --name my-release -f values.yaml bitnami/nginx-ingress-controller
+$ helm install my-release -f values.yaml bitnami/nginx-ingress-controller
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
 
-### Production configuration
-
-This chart includes a `values-production.yaml` file where you can find some parameters oriented to production configuration in comparison to the regular `values.yaml`.
-
-```console
-$ helm install --name my-release -f ./values-production.yaml bitnami/nginx-ingress-controller
-```
-
-- Enable "vts-status" page:
-```diff
-- stats.enabled: false
-+ stats.enabled: true
-```
-
-- Enable Prometheus metrics
-```diff
-- metrics.enabled: false
-+ metrics.enabled: true
-```
+## Configuration and installation details
 
 ### [Rolling VS Immutable tags](https://docs.bitnami.com/containers/how-to/understand-rolling-tags-containers/)
 
 It is strongly recommended to use immutable tags in a production environment. This ensures your deployment does not change automatically if the same tag is updated with a different image.
 
 Bitnami will release a new chart updating its containers if a new version of the main container, significant changes, or critical vulnerabilities exist.
+
+### Production configuration
+
+This chart includes a `values-production.yaml` file where you can find some parameters oriented to production configuration in comparison to the regular `values.yaml`. You can use this file instead of the default one.
+
+- Install the NGINX Ingress Controller as a daemonset:
+
+```diff
+- kind: Deployment
++ kind: DaemonSet
+```
+
+- Enable Prometheus metrics:
+
+```diff
+- metrics.enabled: false
++ metrics.enabled: true
+```
+## Notable changes
+
+### 5.3.0
+
+In this version you can indicate the key to download the GeoLite2 databases using the [parameter](#parameters) `maxmindLicenseKey`.
 
 ## Upgrading
 

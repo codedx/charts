@@ -54,6 +54,24 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end }}
 
 {{/*
+Common labels
+*/}}
+{{- define "mysql.labels" -}}
+app: {{ include "mysql.name" . }}
+chart: {{ include "mysql.chart" . }}
+release: {{ .Release.Name }}
+heritage: {{ .Release.Service }}
+{{- end -}}
+
+{{/*
+Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
+*/}}
+{{- define "mysql.matchLabels" -}}
+app: {{ include "mysql.name" . }}
+release: {{ .Release.Name }}
+{{- end -}}
+
+{{/*
 Return the proper MySQL image name
 */}}
 {{- define "mysql.image" -}}
@@ -73,6 +91,18 @@ Also, we can't use a single if because lazy evaluation is not an option
     {{- end -}}
 {{- else -}}
     {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+{{- end -}}
+{{- end -}}
+
+{{ template "mysql.initdbScriptsCM" . }}
+{{/*
+Get the initialization scripts ConfigMap name.
+*/}}
+{{- define "mysql.initdbScriptsCM" -}}
+{{- if .Values.initdbScriptsConfigMap -}}
+{{- printf "%s" .Values.initdbScriptsConfigMap -}}
+{{- else -}}
+{{- printf "%s-init-scripts" (include "mysql.master.fullname" .) -}}
 {{- end -}}
 {{- end -}}
 
@@ -230,5 +260,51 @@ but Helm 2.9 and 2.10 does not support it, so we need to implement this if-else 
             {{- printf "storageClassName: %s" .Values.slave.persistence.storageClass -}}
         {{- end -}}
     {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Renders a value that contains template.
+Usage:
+{{ include "mysql.tplValue" ( dict "value" .Values.path.to.the.Value "context" $) }}
+*/}}
+{{- define "mysql.tplValue" -}}
+    {{- if typeIs "string" .value }}
+        {{- tpl .value .context }}
+    {{- else }}
+        {{- tpl (.value | toYaml) .context }}
+    {{- end }}
+{{- end -}}
+
+{{/*
+Compile all warnings into a single message, and call fail.
+*/}}
+{{- define "mysql.validateValues" -}}
+{{- $messages := list -}}
+{{- $messages := append $messages (include "mysql.validateValues.loadBalancerIPareNotEquals" .) -}}
+{{- $messages := without $messages "" -}}
+{{- $message := join "\n" $messages -}}
+
+{{- if $message -}}
+{{-   printf "\nVALUES VALIDATION:\n%s" $message | fail -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Validate values of MySql - must provide different IPs */}}
+{{- define "mysql.validateValues.loadBalancerIPareNotEquals" -}}
+{{- if not (empty .Values.service.loadBalancerIP) -}}
+{{- if eq (.Values.service.loadBalancerIP.master | quote) (.Values.service.loadBalancerIP.slave | quote) }}
+mysql: service.loadBalancerIP
+    loadBalancerIP.master is equal to loadBalancerIP.slave which is not possible.
+    Please set a different ip for master and slave services.
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Check if there are rolling tags in the images */}}
+{{- define "mysql.checkRollingTags" -}}
+{{- if and (contains "bitnami/" .Values.image.repository) (not (.Values.image.tag | toString | regexFind "-r\\d+$|sha256:")) }}
+WARNING: Rolling tag detected ({{ .Values.image.repository }}:{{ .Values.image.tag }}), please note that it is strongly recommended to avoid using rolling tags in a production environment.
++info https://docs.bitnami.com/containers/how-to/understand-rolling-tags-containers/
 {{- end -}}
 {{- end -}}

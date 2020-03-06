@@ -215,13 +215,39 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- printf "%s-%s-master" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-Create a template for the redis secret
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+{{/*
+Get the Redis credentials secret.
 */}}
 {{- define "airflow.redis.secretName" -}}
-{{- $name := default "redis" .Values.redis.nameOverride -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- if .Values.redis.enabled -}}
+    {{/* Create a template for the redis secret
+    We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+    */}}
+    {{- $name := default "redis" .Values.redis.nameOverride -}}
+    {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- else }}
+    {{- if .Values.externalRedis.existingSecret -}}
+        {{- printf "%s" .Values.externalRedis.existingSecret -}}
+    {{- else -}}
+        {{ printf "%s-%s" .Release.Name "externalredis" }}
+    {{- end -}}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Get the Postgresql credentials secret.
+*/}}
+{{- define "airflow.postgresql.secretName" -}}
+{{- if .Values.postgresql.enabled -}}
+    {{- printf "%s" (include "airflow.postgresql.fullname" .) -}}
+{{- else }}
+    {{- if .Values.externalDatabase.existingSecret -}}
+        {{- printf "%s" .Values.externalDatabase.existingSecret -}}
+    {{- else -}}
+        {{ printf "%s-%s" .Release.Name "externaldb" }}
+    {{- end -}}
+{{- end -}}
+{{- end -}}    
 
 {{/*
 Get the secret name
@@ -263,6 +289,23 @@ airflow: airflow.cloneDagFilesFromGit.repository
 airflow: airflow.cloneDagFilesFromGit.branch
     The branch must be provided when enabling downloading DAG files
     from git repository (--set airflow.cloneDagFilesFromGit.branch="xxx")
+{{- end -}}
+{{- end -}}
+
+{{/* Validate values of Airflow - "airflow.clonePluginsFromGit.repository" must be provided when "airflow.clonePluginsFromGit.enabled" is "true" */}}
+{{- define "airflow.validateValues.clonePluginsFromGit.repository" -}}
+{{- if and .Values.airflow.clonePluginsFromGit.enabled (empty .Values.airflow.clonePluginsFromGit.repository) -}}
+airflow: airflow.clonePluginsFromGit.repository
+    The repository must be provided when enabling downloading plugins
+    from git repository (--set airflow.clonePluginsFromGit.repository="xxx")
+{{- end -}}
+{{- end -}}
+{{/* Validate values of Airflow - "airflow.clonePluginsFromGit.branch" must be provided when "airflow.clonePluginsFromGit.enabled" is "true" */}}
+{{- define "airflow.validateValues.clonePluginsFromGit.branch" -}}
+{{- if and .Values.airflow.clonePluginsFromGit.enabled (empty .Values.airflow.clonePluginsFromGit.branch) -}}
+airflow: airflow.clonePluginsFromGit.branch
+    The branch must be provided when enabling downloading plugins
+    from git repository (--set airflow.clonePluginsFromGit.branch="xxx")
 {{- end -}}
 {{- end -}}
 

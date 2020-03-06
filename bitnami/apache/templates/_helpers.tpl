@@ -24,6 +24,24 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
+Common labels
+*/}}
+{{- define "apache.labels" -}}
+app.kubernetes.io/name: {{ include "apache.name" . }}
+helm.sh/chart: {{ include "apache.chart" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
+
+{{/*
+Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
+*/}}
+{{- define "apache.matchLabels" -}}
+app.kubernetes.io/name: {{ include "apache.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+
+{{/*
 Return the proper Apache image name
 */}}
 {{- define "apache.image" -}}
@@ -108,7 +126,7 @@ Also, we can't use a single if because lazy evaluation is not an option
 Return true if mouting a static web page
 */}}
 {{- define "apache.useHtdocs" -}}
-{{ or .Values.cloneHtdocsFromGit.enabled .Values.htdocsConfigMap .Values.htdocsPVC }}
+{{ default "" (or .Values.cloneHtdocsFromGit.enabled .Values.htdocsConfigMap .Values.htdocsPVC) }}
 {{- end -}}
 
 {{/*
@@ -120,7 +138,7 @@ emptyDir: {}
 {{- else if .Values.htdocsConfigMap }}
 configMap:
   name: {{ .Values.htdocsConfigMap }}
-{{- else if .Values.htdocsPVC }} 
+{{- else if .Values.htdocsPVC }}
 persistentVolumeClaim:
   claimName: {{ .Values.htdocsPVC }}
 {{- end }}
@@ -194,4 +212,39 @@ Also, we can't use a single if because lazy evaluation is not an option
 {{- else -}}
     {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Get the vhosts config map name.
+*/}}
+{{- define "apache.vhostsConfigMap" -}}
+{{- if .Values.vhostsConfigMap -}}
+    {{- printf "%s" (tpl .Values.vhostsConfigMap $) -}}
+{{- else -}}
+    {{- printf "%s-vhosts" (include "apache.fullname" . ) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Get the httpd.conf config map name.
+*/}}
+{{- define "apache.httpdConfConfigMap" -}}
+{{- if .Values.httpdConfConfigMap -}}
+    {{- printf "%s" (tpl .Values.httpdConfConfigMap $) -}}
+{{- else -}}
+    {{- printf "%s-httpd-conf" (include "apache.fullname" . ) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Renders a value that contains template.
+Usage:
+{{ include "apache.tplValue" ( dict "value" .Values.path.to.the.Value "context" $) }}
+*/}}
+{{- define "apache.tplValue" -}}
+    {{- if typeIs "string" .value }}
+        {{- tpl .value .context }}
+    {{- else }}
+        {{- tpl (.value | toYaml) .context }}
+    {{- end }}
 {{- end -}}

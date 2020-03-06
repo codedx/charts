@@ -6,77 +6,24 @@ Popular applications, provided by [Bitnami](https://bitnami.com), ready to launc
 
 ```bash
 $ helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm search bitnami
+$ helm search repo bitnami
+$ helm install my-release bitnami/<chart>
 ```
 
-## Upstreamed charts (contributed to [helm/charts](https://github.com/helm/charts))
+![Installing a chart](demo.gif)
 
-- [Dokuwiki](https://github.com/helm/charts/tree/master/stable/dokuwiki)
-- [Drupal](https://github.com/helm/charts/tree/master/stable/drupal)
-- [ExternalDNS](https://github.com/helm/charts/tree/master/stable/external-dns)
-- [Ghost](https://github.com/helm/charts/tree/master/stable/ghost)
-- [JasperReports](https://github.com/helm/charts/tree/master/stable/jasperreports)
-- [Joomla!](https://github.com/helm/charts/tree/master/stable/joomla)
-- [Kubewatch](https://github.com/helm/charts/tree/master/stable/kubewatch)
-- [MariaDB](https://github.com/helm/charts/tree/master/stable/mariadb)
-- [MediaWiki](https://github.com/helm/charts/tree/master/stable/mediawiki)
-- [MongoDB](https://github.com/helm/charts/tree/master/stable/mongodb)
-- [Moodle](https://github.com/helm/charts/tree/master/stable/moodle)
-- [NATS](https://github.com/helm/charts/tree/master/stable/nats)
-- [Odoo](https://github.com/helm/charts/tree/master/stable/odoo)
-- [OpenCart](https://github.com/helm/charts/tree/master/stable/opencart)
-- [OrangeHRM](https://github.com/helm/charts/tree/master/stable/orangehrm)
-- [Osclass](https://github.com/helm/charts/tree/master/stable/osclass)
-- [OwnCloud](https://github.com/helm/charts/tree/master/stable/owncloud)
-- [Parse](https://github.com/helm/charts/tree/master/stable/parse)
-- [Phabricator](https://github.com/helm/charts/tree/master/stable/phabricator)
-- [phpBB](https://github.com/helm/charts/tree/master/stable/phpbb)
-- [phpMyAdmin](https://github.com/helm/charts/tree/master/stable/phpmyadmin)
-- [PostgreSQL](https://github.com/helm/charts/tree/master/stable/postgresql)
-- [PrestaShop](https://github.com/helm/charts/tree/master/stable/prestashop)
-- [RabbitMQ](https://github.com/helm/charts/tree/master/stable/rabbitmq)
-- [Redis](https://github.com/helm/charts/tree/master/stable/redis)
-- [Redmine](https://github.com/helm/charts/tree/master/stable/redmine)
-- [SuiteCRM](https://github.com/helm/charts/tree/master/stable/suitecrm)
-- [TestLink](https://github.com/helm/charts/tree/master/stable/testlink)
-- [WordPress](https://github.com/helm/charts/tree/master/stable/wordpress)
+## Charts
 
-## Bitnami charts
+This repository contains:
 
-- [Apache](https://github.com/bitnami/charts/tree/master/bitnami/apache)
-- [Apache Airflow](https://github.com/bitnami/charts/tree/master/bitnami/airflow)
-- [Apache Spark](https://github.com/bitnami/charts/tree/master/bitnami/spark)
-- [Cassandra](https://github.com/bitnami/charts/tree/master/bitnami/cassandra)
-- [Elasticsearch](https://github.com/bitnami/charts/tree/master/bitnami/elasticsearch)
-- [etcd](https://github.com/bitnami/charts/tree/master/bitnami/etcd)
-- [Grafana](https://github.com/bitnami/charts/tree/master/bitnami/grafana)
-- [Harbor](https://github.com/bitnami/charts/tree/master/bitnami/harbor)
-- [HashiCorp Consul](https://github.com/bitnami/charts/tree/master/bitnami/consul)
-- [Jenkins](https://github.com/bitnami/charts/tree/master/bitnami/jenkins)
-- [Kafka](https://github.com/bitnami/charts/tree/master/bitnami/kafka)
-- [Kibana](https://github.com/bitnami/charts/tree/master/bitnami/kibana)
-- [Kubeapps](https://github.com/bitnami/charts/tree/master/bitnami/kubeapps)
-- [Magento](https://github.com/bitnami/charts/tree/master/bitnami/magento)
-- [Memcached](https://github.com/bitnami/charts/tree/master/bitnami/memcached)
-- [MariaDB Galera](https://github.com/bitnami/charts/tree/master/bitnami/mariadb-galera)
-- [Metrics Server](https://github.com/bitnami/charts/tree/master/bitnami/metrics-server)
-- [Minio](https://github.com/bitnami/charts/tree/master/bitnami/minio)
-- [MXNet](https://github.com/bitnami/charts/tree/master/bitnami/mxnet)
-- [MySQL](https://github.com/bitnami/charts/tree/master/bitnami/mysql)
-- [nginx](https://github.com/bitnami/charts/tree/master/bitnami/nginx)
-- [nginx-ingress-controller](https://github.com/bitnami/charts/tree/master/bitnami/nginx-ingress-controller)
-- [NodeJS](https://github.com/bitnami/charts/tree/master/bitnami/node)
-- [PyTorch](https://github.com/bitnami/charts/tree/master/bitnami/pytorch)
-- [TensorFlow ResNet](https://github.com/bitnami/charts/tree/master/bitnami/tensorflow-resnet)
-- [Tomcat](https://github.com/bitnami/charts/tree/master/bitnami/tomcat)
-- [WildFly](https://github.com/bitnami/charts/tree/master/bitnami/wildfly)
-- [ZooKeeper](https://github.com/bitnami/charts/tree/master/bitnami/zookeeper)
+* [Upstreamed charts](./upstreamed) (contributed to [helm/charts](https://github.com/helm/charts))
+* [Bitnami charts](./bitnami)
 
 ## Before you begin
 
 ### Setup a Kubernetes Cluster
 
-The quickest way to setup a Kubernetes cluster is with [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/), [AWS Elastic Container Service](https://aws.amazon.com/eks/) or [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) using their respective quick-start guides. For setting up Kubernetes on other cloud platforms or bare-metal servers refer to the Kubernetes [getting started guide](http://kubernetes.io/docs/getting-started-guides/).
+The quickest way to setup a Kubernetes cluster is with [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/), [AWS Elastic Kubernetes Service](https://aws.amazon.com/eks/) or [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) using their respective quick-start guides. For setting up Kubernetes on other cloud platforms or bare-metal servers refer to the Kubernetes [getting started guide](http://kubernetes.io/docs/getting-started-guides/).
 
 ### Install Helm
 
@@ -89,23 +36,23 @@ To install Helm, refer to the [Helm install guide](https://github.com/helm/helm#
 The stable charts are contributed to the upstream [helm/charts](https://github.com/helm/charts) repository. The following command allows you to download and install all the charts from this repository, both the bitnami and the upstreamed ones.
 
 ```bash
-$ helm repo add bitnami https://charts.bitnami.com
+$ helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
 
 ### Using Helm
 
-Once you have installed the Helm client and initialized the Tiller server, you can deploy a Bitnami Helm Chart into a Kubernetes cluster.
+Once you have installed the Helm client, you can deploy a Bitnami Helm Chart into a Kubernetes cluster.
 
 Please refer to the [Quick Start guide](https://github.com/helm/helm/blob/master/docs/quickstart.md) if you wish to get running in just a few commands, otherwise the [Using Helm Guide](https://github.com/helm/helm/blob/master/docs/using_helm.md) provides detailed instructions on how to use the Helm client to manage packages on your Kubernetes cluster.
 
 Useful Helm Client Commands:
-* View available charts: `helm search`
-* Install a chart: `helm install stable/<package-name>`
+* View available charts: `helm search repo`
+* Install a chart: `helm install my-release bitnami/<package-name>`
 * Upgrade your application: `helm upgrade`
 
 # License
 
-Copyright (c) 2018 Bitnami
+Copyright (c) 2020 Bitnami
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

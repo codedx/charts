@@ -6,7 +6,7 @@
 
 ```console
 $ helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm install bitnami/cassandra
+$ helm install my-release bitnami/cassandra
 ```
 
 ## Introduction
@@ -17,7 +17,8 @@ Bitnami charts can be used with [Kubeapps](https://kubeapps.com/) for deployment
 
 ## Prerequisites
 
-- Kubernetes 1.8+
+- Kubernetes 1.12+
+- Helm 2.11+ or Helm 3.0-beta3+
 - PV provisioner support in the underlying infrastructure
 
 ## Installing the Chart
@@ -26,10 +27,10 @@ To install the chart with the release name `my-release`:
 
 ```console
 $ helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm install --name my-release bitnami/cassandra
+$ helm install my-release bitnami/cassandra
 ```
 
-These commands deploy one node with Cassandra on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
+These commands deploy one node with Cassandra on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
 > **Tip**: List all releases using `helm list`
 
@@ -43,7 +44,7 @@ $ helm delete my-release
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
 
-## Configuration
+## Parameters
 
 The following tables lists the configurable parameters of the cassandra chart and their default values.
 
@@ -65,11 +66,14 @@ The following tables lists the configurable parameters of the cassandra chart an
 | `volumePermissions.enabled`          | Enable init container that changes volume permissions in the data directory (for cases where the default k8s `runAsUser` and `fsUser` values do not work) | `false`                                                      |
 | `volumePermissions.image.registry`   | Init container volume-permissions image registry                                                                                                          | `docker.io`                                                  |
 | `volumePermissions.image.repository` | Init container volume-permissions image name                                                                                                              | `bitnami/minideb`                                            |
-| `volumePermissions.image.tag`        | Init container volume-permissions image tag                                                                                                               | `stretch`                                                    |
+| `volumePermissions.image.tag`        | Init container volume-permissions image tag                                                                                                               | `buster`                                                     |
 | `volumePermissions.image.pullPolicy` | Init container volume-permissions image pull policy                                                                                                       | `Always`                                                     |
 | `volumePermissions.resources`        | Init container resource requests/limit                                                                                                                    | `nil`                                                        |
 | `service.type`                       | Kubernetes Service type                                                                                                                                   | `ClusterIP`                                                  |
-| `service.nodePort`                   | Kubernetes Service nodePort                                                                                                                               | `nil`                                                        |
+| `service.port`                       | CQL Port for the Kubernetes service                                                                                                                       | `9042`                                                       |
+| `service.thriftPort`                 | Thrift Port for the Kubernetes service                                                                                                                    | `9160`                                                       |
+| `service.nodePorts.cql`             | Kubernetes CQL node port                                                                                                                                  | `""`                                                         |
+| `service.nodePorts.rcp`              | Kubernetes Thrift node port                                                                                                                               | `""`                                                         |
 | `service.loadBalancerIP`             | LoadBalancerIP if service type is `LoadBalancer`                                                                                                          | `nil`                                                        |
 | `service.annotations`                | Annotations for the service                                                                                                                               | {}                                                           |
 | `persistence.enabled`                | Use PVCs to persist data                                                                                                                                  | `true`                                                       |
@@ -87,6 +91,7 @@ The following tables lists the configurable parameters of the cassandra chart an
 | `cluster.datacenter`                 | Datacenter name                                                                                                                                           | `dc1`                                                        |
 | `cluster.rack`                       | Rack name                                                                                                                                                 | `rack1`                                                      |
 | `cluster.enableRPC`                  | Enable Thrift RPC endpoint                                                                                                                                | `true`                                                       |
+| `cluster.enableUDF'                  | Enable CASSANDRA_ENABLE_USER_DEFINED_FUNCTIONS                                                                                                            | `false`                                                      |
 | `cluster.minimumAvailable`           | Minimum nuber of instances that must be available in the cluster (used of PodDisruptionBudget)                                                            | `1`                                                          |
 | `cluster.internodeEncryption`        | Set internode encryption. NOTE: A value different from 'none' requires setting `tlsEncryptionSecretName`                                                  | `none`                                                       |
 | `cluster.clientEncryption`           | Set client-server encryption. NOTE: A value different from 'false' requires setting `tlsEncryptionSecretName`                                             | `false`                                                      |
@@ -94,8 +99,6 @@ The following tables lists the configurable parameters of the cassandra chart an
 | `cluster.jvm.maxHeapSize`            | Set Java Virtual Machine maximum heap size (MAX_HEAP_SIZE). Calculated automatically if `nil`                                                             | `nil`                                                        |
 | `cluster.jvm.newHeapSize`            | Set Java Virtual Machine new heap size (HEAP_NEWSIZE). Calculated automatically if `nil`                                                                  | `nil`                                                        |
 | `cluster.domain`                     | Set the kubernetes cluster domain                                                                                                                         | `cluster.local`                                              |
-| `service.port`                       | CQL Port for the Kubernetes service                                                                                                                       | `9042`                                                       |
-| `service.thriftPort`                 | Thrift Port for the Kubernetes service                                                                                                                    | `9160`                                                       |
 | `dbUser.user`                        | Cassandra admin user                                                                                                                                      | `cassandra`                                                  |
 | `dbUser.forcePassword`               | Force the user to provide a non-empty password for `dbUser.user`                                                                                          | `false`                                                      |
 | `dbUser.password`                    | Password for `dbUser.user`. Randomly generated if empty                                                                                                   | (Random generated)                                           |
@@ -139,7 +142,7 @@ The above parameters map to the env variables defined in [bitnami/cassandra](htt
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```console
-$ helm install --name my-release \
+$ helm install my-release \
   --set dbUser.user=admin,dbUser.password=password\
     bitnami/cassandra
 ```
@@ -147,18 +150,22 @@ $ helm install --name my-release \
 Alternatively, a YAML file that specifies the values for the above parameters can be provided while installing the chart. For example,
 
 ```console
-$ helm install --name my-release -f values.yaml bitnami/cassandra
+$ helm install my-release -f values.yaml bitnami/cassandra
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
 
+## Configuration and installation details
+
+### [Rolling VS Immutable tags](https://docs.bitnami.com/containers/how-to/understand-rolling-tags-containers/)
+
+It is strongly recommended to use immutable tags in a production environment. This ensures your deployment does not change automatically if the same tag is updated with a different image.
+
+Bitnami will release a new chart updating its containers if a new version of the main container, significant changes, or critical vulnerabilities exist.
+
 ### Production configuration
 
-This chart includes a `values-production.yaml` file where you can find some parameters oriented to production configuration in comparison to the regular `values.yaml`.
-
-```console
-$ helm install --name my-release -f ./values-production.yaml bitnami/cassandra
-```
+This chart includes a `values-production.yaml` file where you can find some parameters oriented to production configuration in comparison to the regular `values.yaml`. You can use this file instead of the default one.
 
 - Number of Cassandra and seed nodes:
 ```diff
@@ -192,18 +199,37 @@ $ helm install --name my-release -f ./values-production.yaml bitnami/cassandra
 + metrics.enabled: true
 ```
 
-### [Rolling VS Immutable tags](https://docs.bitnami.com/containers/how-to/understand-rolling-tags-containers/)
+### Enable TLS for Cassandra
 
-It is strongly recommended to use immutable tags in a production environment. This ensures your deployment does not change automatically if the same tag is updated with a different image.
+You can enable TLS between client and server and between nodes. In order to do so, you need to set the following values:
 
-Bitnami will release a new chart updating its containers if a new version of the main container, significant changes, or critical vulnerabilities exist.
+ * For internode cluster encryption, set `cluster.internodeEncryption` to a value different from `none`. Available values are `all`, `dc` or `rack`.
+ * For client-server encryption, set `cluster.clientEncryption` to true.
+
+In addition to this, you **must** create a secret containing the *keystore* and *truststore* certificates and their corresponding protection passwords. Then, set the `tlsEncryptionSecretName`  when deploying the chart.
+
+You can create the secret (named for example `cassandra-tls`) using `--from-file=./keystore`, `--from-file=./truststore`, `--from-literal=keystore-password=PUT_YOUR_KEYSTORE_PASSWORD` and `--from-literal=truststore-password=PUT_YOUR_TRUSTSTORE_PASSWORD` options, assuming you have your certificates in your working directory (replace the PUT_YOUR_KEYSTORE_PASSWORD and PUT_YOUR_TRUSTSTORE_PASSWORD placeholders).To deploy Cassandra with TLS you can use those parameters:
+
+```console
+cluster.internodeEncryption=all
+cluster.clientEncryption=true
+tlsEncryptionSecretName=cassandra-tls
+```
+
+### Initializing the database
+
+The [Bitnami cassandra](https://github.com/bitnami/bitnami-docker-cassandra) image allows having initialization scripts mounted in `/docker-entrypoint.initdb`. This is done in the chart by adding files in the `files/docker-entrypoint-initdb.d` folder (in order to do so, clone this chart) or by setting the `initDBConfigMap` value with a `ConfigMap` (named, for example, `init-db`) that includes the necessary `sh` or `cql` scripts:
+
+```console
+initDBConfigMap=init-db
+```
 
 ## Persistence
 
 The [Bitnami cassandra](https://github.com/bitnami/bitnami-docker-cassandra) image stores the cassandra data at the `/bitnami/cassandra` path of the container.
 
 Persistent Volume Claims are used to keep the data across deployments. This is known to work in GCE, AWS, and minikube.
-See the [Configuration](#configuration) section to configure the PVC or to disable persistence.
+See the [Parameters](#parameters) section to configure the PVC or to disable persistence.
 
 ### Adjust permissions of persistent volume mountpoint
 
@@ -214,42 +240,16 @@ As an alternative, this chart supports using an initContainer to change the owne
 
 You can enable this initContainer by setting `volumePermissions.enabled` to `true`.
 
-## Enable TLS for Cassandra
+## Upgrade
 
-You can enable TLS between client and server and between nodes. In order to do so, you need to set the following values:
+### 5.0.0
 
- * For internode cluster encryption, set `cluster.internodeEncryption` to a value different from `none`. Available values are `all`, `dc` or `rack`.
- * For client-server encryption, set `cluster.clientEncryption` to true.
-
-In addition to this, you **must** create a secret containing the *keystore* and *truststore* certificates and their corresponding protection passwords. Then, set the `tlsEncryptionSecretName`  when deploying the chart.
-
-You can create the secret with this command assuming you have your certificates in your working directory (replace the PUT_YOUR_KEYSTORE_PASSWORD and PUT_YOUR_TRUSTSTORE_PASSWORD placeholders):
-
-```console
-kubectl create secret generic casssandra-tls --from-file=./keystore --from-file=./truststore --from-literal=keystore-password=PUT_YOUR_KEYSTORE_PASSWORD --from-literal=truststore-password=PUT_YOUR_TRUSTSTORE_PASSWORD
-```
-
-As an example of Cassandra installed with TLS you can use this command:
-
-```console
-helm install --name my-release bitnami/cassandra --set cluster.internodeEncryption=all \
-             --set cluster.clientEncryption=true --set tlsEncryptionSecretName=cassandra-tls \
-```
-
-## Initializing the database
-
-The [Bitnami cassandra](https://github.com/bitnami/bitnami-docker-cassandra) image allows having initialization scripts mounted in `/docker-entrypoint.initdb`. This is done in the chart by adding files in the `files/docker-entrypoint-initdb.d` folder (in order to do so, clone this chart) or by setting the `initDBConfigMap` value with a `ConfigMap` that includes the necessary `sh` or `cql` scripts:
+An issue in StatefulSet manifest of the 4.x chart series rendered chart upgrades to be broken. The 5.0.0 series fixes this issue. To upgrade to the 5.x series you need to manually delete the Cassandra StatefulSet before executing the `helm upgrade` command.
 
 ```bash
-kubectl create configmap init-db --from-file=path/to/scripts
-helm install bitnami/cassandra --set initDBConfigMap=init-db
+$ kubectl delete sts -l release=<RELEASE_NAME>
+$ helm upgrade <RELEASE_NAME> ...
 ```
-
-## Using a custom Cassandra image
-
-This chart uses the [Bitnami cassandra](https://github.com/bitnami/bitnami-docker-cassandra) image by default. In case you want to use a different image, you can redefine the container entrypoint by setting the `entrypoint` and `cmd` values.
-
-## Upgrade
 
 ### 4.0.0
 

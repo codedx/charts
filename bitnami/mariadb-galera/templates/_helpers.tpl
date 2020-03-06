@@ -28,6 +28,27 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
+Common labels
+*/}}
+{{- define "mariadb-galera.labels" -}}
+app.kubernetes.io/name: {{ include "mariadb-galera.name" . }}
+helm.sh/chart: {{ include "mariadb-galera.chart" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- if .Values.podLabels }}
+{{- toYaml .Values.podLabels -}}
+{{- end }}
+{{- end -}}
+
+{{/*
+Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
+*/}}
+{{- define "mariadb-galera.matchLabels" -}}
+app.kubernetes.io/name: {{ include "mariadb-galera.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+
+{{/*
 Return the proper MariaDB Galera image name
 */}}
 {{- define "mariadb-galera.image" -}}
@@ -201,7 +222,7 @@ mariadb-galera: LDAP
     Invalid LDAP configuration. When enabling LDAP support, the parameters "ldap.uri",
     "ldap.base", "ldap.binddn", and "ldap.bindpw" are mandatory. Please provide them:
 
-    $ helm install --name {{ .Release.Name }} bitnami/mariadb-galera \
+    $ helm install {{ .Release.Name }} bitnami/mariadb-galera \
       --set ldap.enabled=true \
       --set ldap.uri="ldap://my_ldap_server" \
       --set ldap.base="dc=example,dc=org" \
@@ -243,4 +264,17 @@ but Helm 2.9 and 2.10 does not support it, so we need to implement this if-else 
         {{- end -}}
     {{- end -}}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Renders a value that contains template.
+Usage:
+{{ include "mariadb-galera.tplValue" ( dict "value" .Values.path.to.the.Value "context" $) }}
+*/}}
+{{- define "mariadb-galera.tplValue" -}}
+    {{- if typeIs "string" .value }}
+        {{- tpl .value .context }}
+    {{- else }}
+        {{- tpl (.value | toYaml) .context }}
+    {{- end }}
 {{- end -}}

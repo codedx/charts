@@ -32,6 +32,35 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 {{/*
+ Create the name of the service account to use
+ */}}
+{{- define "kafka.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
+    {{ default (include "kafka.fullname" .) .Values.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Common labels
+*/}}
+{{- define "kafka.labels" -}}
+app.kubernetes.io/name: {{ include "kafka.name" . }}
+helm.sh/chart: {{ include "kafka.chart" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
+
+{{/*
+Labels to use on deploy.spec.selector.matchLabels and svc.spec.selector
+*/}}
+{{- define "kafka.matchLabels" -}}
+app.kubernetes.io/name: {{ include "kafka.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+
+{{/*
 Return the proper Kafka image name
 */}}
 {{- define "kafka.image" -}}
@@ -215,5 +244,62 @@ but Helm 2.9 and 2.10 does not support it, so we need to implement this if-else 
             {{- printf "storageClassName: %s" .Values.persistence.storageClass -}}
         {{- end -}}
     {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Renders a value that contains template.
+Usage:
+{{ include "kafka.tplValue" ( dict "value" .Values.path.to.the.Value "context" $) }}
+*/}}
+{{- define "kafka.tplValue" -}}
+    {{- if typeIs "string" .value }}
+        {{- tpl .value .context }}
+    {{- else }}
+        {{- tpl (.value | toYaml) .context }}
+    {{- end }}
+{{- end -}}
+
+{{/*
+Compile all warnings into a single message, and call fail.
+*/}}
+{{- define "kafka.validateValues" -}}
+{{- $messages := list -}}
+{{- $messages := append $messages (include "kafka.validateValues.nodePortListLength" .) -}}
+{{- $messages := append $messages (include "kafka.validateValues.loadBalancerIPListLength" .) -}}
+{{- $messages := append $messages (include "kafka.validateValues.externalAccessServiceType" .) -}}
+{{- $messages := without $messages "" -}}
+{{- $message := join "\n" $messages -}}
+
+{{- if $message -}}
+{{-   printf "\nVALUES VALIDATION:\n%s" $message | fail -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Validate values of Kafka - number of replicas must be the same than loadBalancerIP list */}}
+{{- define "kafka.validateValues.loadBalancerIPListLength" -}}
+{{- $replicaCount := int .Values.replicaCount }}
+{{- $loadBalancerIPListLength := len .Values.externalAccess.service.loadBalancerIP }}
+{{- if and ( .Values.externalAccess.enabled ) ( not (eq $replicaCount $loadBalancerIPListLength )) (eq .Values.externalAccess.service.type "LoadBalancer") -}}
+kafka: externalAccess.service.loadBalancerIP
+    Number of replicas and loadBalancerIP array length must be the same.
+{{- end -}}
+{{- end -}}
+
+{{/* Validate values of Kafka - number of replicas must be the same than NodePort list */}}
+{{- define "kafka.validateValues.nodePortListLength" -}}
+{{- $replicaCount := int .Values.replicaCount }}
+{{- $nodePortListLength := len .Values.externalAccess.service.nodePort }}
+{{- if and ( .Values.externalAccess.enabled ) ( not (eq $replicaCount $nodePortListLength )) (eq .Values.externalAccess.service.type "NodePort") -}}
+kafka: .Values.externalAccess.service.nodePort
+    Number of replicas and nodePort array length must be the same.
+{{- end -}}
+{{- end -}}
+
+{{/* Validate values of Kafka - service type for external access */}}
+{{- define "kafka.validateValues.externalAccessServiceType" -}}
+{{- if and (not (eq .Values.externalAccess.service.type "NodePort")) (not (eq .Values.externalAccess.service.type "LoadBalancer")) -}}
+kafka: externalAccess.service.type
+    Available servive type for external access are NodePort or LoadBalancer.
 {{- end -}}
 {{- end -}}

@@ -2,11 +2,11 @@
 
 [MariaDB Galera](https://mariadb.com/kb/en/library/what-is-mariadb-galera-cluster/) is a multi-master database cluster solution for synchronous replication and high availability.
 
-## TL;DR
+## TL;DR;
 
 ```bash
 $ helm repo add bitnami https://charts.bitnami.com/bitnami
-$ helm install bitnami/mariadb-galera
+$ helm install my-release bitnami/mariadb-galera
 ```
 
 ## Introduction
@@ -31,10 +31,10 @@ $ helm repo add bitnami https://charts.bitnami.com/bitnami
 To install the chart with the release name `my-release`:
 
 ```bash
-$ helm install --name my-release bitnami/mariadb-galera
+$ helm install my-release bitnami/mariadb-galera
 ```
 
-The command deploys MariaDB Galera on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
+The command deploys MariaDB Galera on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
 > **Tip**: List all releases using `helm list`
 
@@ -54,15 +54,15 @@ $ helm delete --purge my-release
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
 
-## Configuration
+## Parameters
 
 The following table lists the configurable parameters of the MariaDB Galera chart and their default values.
 
-|              Parameter               |                   Description                                                                                                                               |                              Default                              |
+|              Parameter               |                                                                         Description                                                                         |                              Default                              |
 |--------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
 | `global.imageRegistry`               | Global Docker image registry                                                                                                                                | `nil`                                                             |
 | `global.imagePullSecrets`            | Global Docker registry secret names as an array                                                                                                             | `[]` (does not add image pull secrets to deployed pods)           |
-| `global.storageClass`                     | Global storage class for dynamic provisioning                                               | `nil`                                                        |
+| `global.storageClass`                | Global storage class for dynamic provisioning                                                                                                               | `nil`                                                             |
 | `image.registry`                     | MariaDB Galera image registry                                                                                                                               | `docker.io`                                                       |
 | `image.repository`                   | MariaDB Galera Image name                                                                                                                                   | `bitnami/mariadb-galera`                                          |
 | `image.tag`                          | MariaDB Galera Image tag                                                                                                                                    | `{TAG_NAME}`                                                      |
@@ -79,6 +79,7 @@ The following table lists the configurable parameters of the MariaDB Galera char
 | `service.loadBalancerIP`             | `loadBalancerIP` if service type is `LoadBalancer`                                                                                                          | `nil`                                                             |
 | `service.loadBalancerSourceRanges`   | Address that are allowed when svc is `LoadBalancer`                                                                                                         | `[]`                                                              |
 | `service.annotations`                | Additional annotations for MariaDB Galera service                                                                                                           | `{}`                                                              |
+| `clusterDomain`                      | Kubernetes DNS Domain name to use                                                                                                                           | `cluster.local`                                                   |
 | `serviceAccount.create`              | Specify whether a ServiceAccount should be created                                                                                                          | `false`                                                           |
 | `serviceAccount.name`                | The name of the ServiceAccount to create                                                                                                                    | Generated using the mariadb-galera.fullname template              |
 | `rbac.create`                        | Specify whether RBAC resources should be created and used                                                                                                   | `false`                                                           |
@@ -114,9 +115,7 @@ The following table lists the configurable parameters of the MariaDB Galera char
 | `annotations[].value`                | value for the the annotation list item                                                                                                                      | `nil`                                                             |
 | `replicaCount`                       | Desired number of cluster nodes                                                                                                                             | `3`                                                               |
 | `updateStrategy`                     | Statefulset update strategy policy                                                                                                                          | `RollingUpdate`                                                   |
-| `nodeAffinity`                       | Node Affinity (this value is evaluated as a template)                                                                                                       | `{}`                                                              |
-| `podAntiAffinity`                    | Pod anti-affinity policy                                                                                                                                    | `soft`                                                            |
-| `podAffinity`                        | Affinity, in addition to antiAffinity (this value is evaluated as a template)                                                                               | `{}`                                                              |
+| `affinity`                           | Map of node/pod affinities                                                                                                                                  | `{}` (The value is evaluated as a template)                       |
 | `nodeSelector`                       | Node labels for pod assignment (this value is evaluated as a template)                                                                                      | `{}`                                                              |
 | `tolerations`                        | List of node taints to tolerate (this value is evaluated as a template)                                                                                     | `[]`                                                              |
 | `persistence.enabled`                | Enable persistence using PVC                                                                                                                                | `true`                                                            |
@@ -127,7 +126,12 @@ The following table lists the configurable parameters of the MariaDB Galera char
 | `persistence.storageClass`           | Persistent Volume Storage Class                                                                                                                             | `nil`                                                             |
 | `persistence.accessModes`            | Persistent Volume Access Modes                                                                                                                              | `[ReadWriteOnce]`                                                 |
 | `persistence.size`                   | Persistent Volume Size                                                                                                                                      | `8Gi`                                                             |
-| `extraInitContainers`                | Additional init containers (this value is evaluated as a template)                                                                                          | `nil`                                                             |
+| `podLabels`                          | Additional pod labels                                                                                                                                       | `{}`                                                              |
+| `priorityClassName`                  | Priority Class Name for Statefulset                                                                                                                         | ``                                                                |
+| `extraInitContainers`                | Additional init containers (this value is evaluated as a template)                                                                                          | `[]`                                                              |
+| `extraContainers`                    | Additional containers (this value is evaluated as a template)                                                                                               | `[]`                                                              |
+| `extraVolumes`                       | Extra volumes                                                                                                                                               | `nil`                                                             |
+| `extraVolumeMounts`                  | Mount extra volume(s)                                                                                                                                       | `nil`                                                             |
 | `resources`                          | CPU/Memory resource requests/limits for node                                                                                                                | `{}`                                                              |
 | `livenessProbe.enabled`              | Turn on and off liveness probe                                                                                                                              | `true`                                                            |
 | `livenessProbe.initialDelaySeconds`  | Delay before liveness probe is initiated                                                                                                                    | `120`                                                             |
@@ -161,7 +165,7 @@ The above parameters map to the env variables defined in [bitnami/mariadb-galera
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```bash
-$ helm install --name my-release \
+$ helm install my-release \
   --set rootUser.password=secretpassword,
   --set db.user=app_database \
     bitnami/mariadb-galera
@@ -172,57 +176,34 @@ The above command sets the MariaDB `root` account password to `secretpassword`. 
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
 ```bash
-$ helm install --name my-release -f values.yaml bitnami/mariadb-galera
+$ helm install my-release -f values.yaml bitnami/mariadb-galera
 ```
 
 > **Tip**: You can use the default [values.yaml](values.yaml)
 
-### LDAP
+## Passing extra command-line flags to mysqld startup
 
-LDAP support can be enabled in the chart by specifying the `ldap.` parameters while creating a release. The following parameters should be configured to properly enable the LDAP support in the chart.
+While the chart allows you to specify the server configuration using the `.mariadbConfiguration` chart parameter, some options for the MariaDB server can only be specified via command line flags. For such cases, the chart exposes the `.extraFlags` parameter.
 
-- `ldap.enabled`: Enable LDAP support. Defaults to `false`.
-- `ldap.uri`: LDAP URL beginning in the form `ldap[s]://<hostname>:<port>`. No defaults.
-- `ldap.base`: LDAP base DN. No defaults.
-- `ldap.binddn`: LDAP bind DN. No defaults.
-- `ldap.bindpw`: LDAP bind password. No defaults.
-- `ldap.bslookup`: LDAP base lookup. No defaults.
-- `ldap.nss_initgroups_ignoreusers`: LDAP ignored users. `root,nslcd`.
-- `ldap.scope`: LDAP search scope. No defaults.
-- `ldap.tls_reqcert`: LDAP TLS check on server certificates. No defaults.
-
-For example:
+For example, if you want to enable the PAM cleartext plugin, specify the command line parameter while deploying the chart like so:
 
 ```bash
-$ helm install --name my-release bitnami/mariadb-galera \
-    --set ldap.enabled="true" \
-    --set ldap.uri="ldap://my_ldap_server" \
-    --set ldap.base="dc=example,dc=org" \
-    --set ldap.binddn="cn=admin,dc=example,dc=org" \
-    --set ldap.bindpw="admin" \
-    --set ldap.bslookup="ou=group-ok,dc=example,dc=org" \
-    --set ldap.nss_initgroups_ignoreusers="root,nslcd" \
-    --set ldap.scope="sub" \
-    --set ldap.tls_reqcert="demand"
+$ helm install my-release \
+  --set extraFlags="--pam-use-cleartext-plugin=ON" \
+  bitnami/mariadb-galera
 ```
 
-Next, login to the MariaDB server using the `mysql` client and add the PAM authenticated LDAP users.
+## Configuration and installation details
 
-For example,
+### [Rolling VS Immutable tags](https://docs.bitnami.com/containers/how-to/understand-rolling-tags-containers/)
 
-```mysql
-CREATE USER 'bitnami'@'localhost' IDENTIFIED VIA pam USING 'mariadb';
-```
+It is strongly recommended to use immutable tags in a production environment. This ensures your deployment does not change automatically if the same tag is updated with a different image.
 
-With the above example, when the `bitnami` user attempts to login to the MariaDB server, he/she will be authenticated against the LDAP server.
+Bitnami will release a new chart updating its containers if a new version of the main container, significant changes, or critical vulnerabilities exist.
 
 ### Production configuration
 
-This chart includes a `values-production.yaml` file where you can find some parameters oriented to production configuration in comparison to the regular `values.yaml`.
-
-```console
-$ helm install --name my-release -f ./values-production.yaml bitnami/mariadb-galera
-```
+This chart includes a `values-production.yaml` file where you can find some parameters oriented to production configuration in comparison to the regular `values.yaml`. You can use this file instead of the default one.
 
 - Force users to specify a password:
 
@@ -242,13 +223,45 @@ $ helm install --name my-release -f ./values-production.yaml bitnami/mariadb-gal
 + metrics.enabled: true
 ```
 
-### [Rolling VS Immutable tags](https://docs.bitnami.com/containers/how-to/understand-rolling-tags-containers/)
+### LDAP
 
-It is strongly recommended to use immutable tags in a production environment. This ensures your deployment does not change automatically if the same tag is updated with a different image.
+LDAP support can be enabled in the chart by specifying the `ldap.` parameters while creating a release. The following parameters should be configured to properly enable the LDAP support in the chart.
 
-Bitnami will release a new chart updating its containers if a new version of the main container, significant changes, or critical vulnerabilities exist.
+- `ldap.enabled`: Enable LDAP support. Defaults to `false`.
+- `ldap.uri`: LDAP URL beginning in the form `ldap[s]://<hostname>:<port>`. No defaults.
+- `ldap.base`: LDAP base DN. No defaults.
+- `ldap.binddn`: LDAP bind DN. No defaults.
+- `ldap.bindpw`: LDAP bind password. No defaults.
+- `ldap.bslookup`: LDAP base lookup. No defaults.
+- `ldap.nss_initgroups_ignoreusers`: LDAP ignored users. `root,nslcd`.
+- `ldap.scope`: LDAP search scope. No defaults.
+- `ldap.tls_reqcert`: LDAP TLS check on server certificates. No defaults.
 
-## Initialize a fresh instance
+For example:
+
+```console
+ldap.enabled="true"
+ldap.uri="ldap://my_ldap_server"
+ldap.base="dc=example,dc=org"
+ldap.binddn="cn=admin,dc=example,dc=org"
+ldap.bindpw="admin"
+ldap.bslookup="ou=group-ok,dc=example,dc=org"
+ldap.nss_initgroups_ignoreusers="root,nslcd"
+ldap.scope="sub"
+ldap.tls_reqcert="demand"
+```
+
+Next, login to the MariaDB server using the `mysql` client and add the PAM authenticated LDAP users.
+
+For example,
+
+```mysql
+CREATE USER 'bitnami'@'localhost' IDENTIFIED VIA pam USING 'mariadb';
+```
+
+With the above example, when the `bitnami` user attempts to login to the MariaDB server, he/she will be authenticated against the LDAP server.
+
+### Initialize a fresh instance
 
 The [Bitnami MariaDB Galera](https://github.com/bitnami/bitnami-docker-mariadb-galera) image allows you to use your custom scripts to initialize a fresh instance. In order to execute the scripts, they must be located inside the chart folder `files/docker-entrypoint-initdb.d` so they can be consumed as a ConfigMap.
 
@@ -258,24 +271,53 @@ In addition to these options, you can also set an external ConfigMap with all th
 
 The allowed extensions are `.sh`, `.sql` and `.sql.gz`.
 
-## Persistence
-
-The [Bitnami MariaDB Galera](https://github.com/bitnami/bitnami-docker-mariadb-galera) image stores the MariaDB data and configurations at the `/bitnami/mariadb` path of the container.
-
-The chart mounts a [Persistent Volume](kubernetes.io/docs/user-guide/persistent-volumes/) volume at this location. The volume is created using dynamic volume provisioning, by default. An existing PersistentVolumeClaim can be defined.
-
 ## Extra Init Containers
 
 The feature allows for specifying a template string for a initContainer in the pod. Usecases include situations when you need some pre-run setup. For example, in IKS (IBM Cloud Kubernetes Service), non-root users do not have write permission on the volume mount path for NFS-powered file storage. So, you could use a initcontainer to `chown` the mount. See a example below, where we add an initContainer on the pod that reports to an external resource that the db is going to starting.
 `values.yaml`
 ```yaml
-extraInitContainers: |
+extraInitContainers:
 - name: initcontainer
-  image: bitnami/minideb:stretch
+  image: bitnami/minideb:buster
   command: ["/bin/sh", "-c"]
   args:
     - install_packages curl && curl http://api-service.local/db/starting;
 ```
+
+## Extra Containers
+
+The feature allows for specifying additional containers in the pod. Usecases include situations when you need to run some sidecar containers. For example, you can observe if mysql in pod is running and report to some service discovery software like eureka. Example:
+`values.yaml`
+```yaml
+extraContainers:
+- name: '{{ .Chart.Name }}-eureka-sidecar'
+  image: 'image:tag'
+  env:
+  - name: SERVICE_NAME
+    value: '{{ template "mariadb-galera.fullname" . }}'
+  - name: EUREKA_APP_NAME
+    value: '{{ template "mariadb-galera.name" . }}'
+  - name: MARIADB_USER
+    value: '{{ .Values.db.user }}'
+  - name: MARIADB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: '{{ template "mariadb-galera.fullname" . }}'
+        key: mariadb-password
+  resources:
+    limits:
+      cpu: 100m
+      memory: 20Mi
+    requests:
+      cpu: 50m
+      memory: 10Mi
+```
+
+## Persistence
+
+The [Bitnami MariaDB Galera](https://github.com/bitnami/bitnami-docker-mariadb-galera) image stores the MariaDB data and configurations at the `/bitnami/mariadb` path of the container.
+
+The chart mounts a [Persistent Volume](kubernetes.io/docs/user-guide/persistent-volumes/) volume at this location. The volume is created using dynamic volume provisioning, by default. An existing PersistentVolumeClaim can be defined.
 
 ## Upgrading
 
