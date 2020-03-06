@@ -247,6 +247,7 @@ Return the service account name
 {{- else -}}
 {{- default "default" .Values.serviceAccount.name -}}
 {{- end -}}
+{{- end -}}
 
 {{/*
 Renders a value that contains template.
