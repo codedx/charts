@@ -1,0 +1,7 @@
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: {{ include "minio.priorityClassName" . | quote }}
+value: {{ .Values.priorityClassValue }}
+globalDefault: false
+description: "The priority class for MinIO."

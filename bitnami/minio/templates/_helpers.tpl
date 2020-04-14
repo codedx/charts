@@ -263,3 +263,7 @@ is true or default otherwise.
         {{ default "default" .Values.serviceAccount.name }}
     {{- end -}}
 {{- end -}}
+
+{{- define "minio.priorityClassName" -}}
+{{- printf "%s-%s" (include "minio.fullname" .) "pc" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}

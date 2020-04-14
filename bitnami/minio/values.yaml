@@ -387,4 +387,4 @@ serviceAccount:
   ## will be created. Otherwise, a name will be auto-generated.
   name:
 
-priorityClassName: ""
+priorityClassValue: 0

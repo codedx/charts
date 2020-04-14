@@ -52,7 +52,7 @@ spec:
               mountPath: {{ .Values.persistence.mountPath }}
       {{- end }}
       serviceAccountName: {{ include "minio.serviceAccountName" . | quote }}
-      priorityClassName: {{ .Values.priorityClassName | quote }}
+      priorityClassName: {{ include "minio.priorityClassName" . | quote }}
       containers:
       - name: "minio"
         image: {{ include "minio.image" . }}
