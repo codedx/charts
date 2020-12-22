@@ -388,3 +388,8 @@ serviceAccount:
   name:
 
 priorityClassValue: 0
+
+podDisruptionBudget:
+  enabled: false
+  # minAvailable: 1
+  # maxUnavailable: 1
