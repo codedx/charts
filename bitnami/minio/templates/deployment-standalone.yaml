@@ -86,11 +86,11 @@ spec:
               name: {{ include "minio.secretName" . }}
               key: secret-key
         {{- end }}
-        {{- if (and (not .Values.tls.enabled) .Values.defaultBuckets) }}
+        {{- if (and (not .Values.tlsSecret) .Values.defaultBuckets) }}
         - name: MINIO_DEFAULT_BUCKETS
           value: {{ .Values.defaultBuckets }}
         {{- end }}
-        {{- if .Values.tls.enabled  }}
+        {{- if .Values.tlsSecret  }}
         - name: MINIO_SKIP_CLIENT
           value: "yes"
         {{- end }}
@@ -112,7 +112,7 @@ spec:
           httpGet:
             path: /minio/health/live
             port: minio
-            {{- if .Values.tls.enabled }}
+            {{- if .Values.tlsSecret }}
             scheme: HTTPS
             {{ else }}
             scheme: HTTP
@@ -139,7 +139,7 @@ spec:
         {{- end }}
         - name: "data"
           mountPath: {{ .Values.persistence.mountPath }}
-        {{- if .Values.tls.enabled }}
+        {{- if .Values.tlsSecret }}
         - name: cert-secret-volume
           mountPath: /certs
         {{- end }}
@@ -156,16 +156,16 @@ spec:
       {{- else }}
         emptyDir: {}
       {{- end }}
-      {{- if .Values.tls.enabled }}
+      {{- if .Values.tlsSecret }}
       - name: cert-secret-volume
         secret:
-          secretName: {{ .Values.tls.certSecret }}
+          secretName: {{ .Values.tlsSecret }}
           items:
-          - key: {{ .Values.tls.publicCrt }}
+          - key: tls.crt
             path: public.crt
-          - key: {{ .Values.tls.privateKey }}
+          - key: tls.key
             path: private.key
-          - key: {{ .Values.tls.publicCrt }}
+          - key: tls.crt
             path: CAs/public.crt
       {{ end }}
  {{- end }}
