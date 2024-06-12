@@ -13,6 +13,9 @@ global:
 #    - myRegistryKeySecretName
 #   storageClass: myStorageClass
 
+# -- labels added to the MinIO pod
+podLabels: {}
+
 ## Bitnami MinIO image version
 ## ref: https://hub.docker.com/r/bitnami/minio/tags/
 ##

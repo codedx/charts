@@ -13,7 +13,11 @@ spec:
     matchLabels: {{- include "minio.matchLabels" . | nindent 6 }}
   template:
     metadata:
-      labels: {{- include "minio.labels" . | nindent 8 }}
+      labels:        
+      {{- with .Values.podLabels }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- include "minio.labels" . | nindent 8 }}
       {{- if or .Values.podAnnotations }}
       annotations: {{- include "minio.tplValue" ( dict "value" .Values.podAnnotations "context" $) | nindent 8 }}
       {{- end }}
