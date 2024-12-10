@@ -38,7 +38,7 @@ spec:
       {{- end }}
       {{- if .Values.securityContext.enabled }}
       securityContext:
-        fsGroup: {{ .Values.securityContext.fsGroup }}
+        {{- toYaml .Values.securityContext.pod | nindent 8 }}
       {{- end }}
       {{- if and .Values.volumePermissions.enabled .Values.persistence.enabled }}
       initContainers:
@@ -51,7 +51,7 @@ spec:
             - |
               chown -R {{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.fsGroup }} {{ .Values.persistence.mountPath }}
           securityContext:
-            runAsUser: 0
+            {{- toYaml .Values.securityContext.initContainer | nindent 12 }}
           {{- if .Values.volumePermissions.resources }}
           resources: {{- toYaml .Values.volumePermissions.resources | nindent 12 }}
           {{- end }}
@@ -65,7 +65,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
           {{- if .Values.securityContext.enabled }}
           securityContext:
-            runAsUser: {{ .Values.securityContext.runAsUser }}
+            {{- toYaml .Values.securityContext.minioContainer | nindent 12 }}
           {{- end }}
           env:
             - name: BITNAMI_DEBUG

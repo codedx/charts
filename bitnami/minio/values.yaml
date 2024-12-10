@@ -143,7 +143,7 @@ statefulset:
 
 ## Mount MinIO secret as a file instead of passing environment variable
 ##
-useCredentialsFile: false
+useCredentialsFile: true
 
 ## MinIO credentials
 ##
@@ -184,8 +184,12 @@ extraEnv: {}
 ##
 securityContext:
   enabled: true
-  fsGroup: 1001
-  runAsUser: 1001
+  pod:
+    fsGroup: 1001
+  initContainer:
+    runAsUser: 0
+  minioContainer:
+    runAsUser: 1001
 
 ## Pod annotations
 ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
