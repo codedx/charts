@@ -1,0 +1,9 @@
+{{- if ne (toString .Values.priorityClassValue) "0" }}
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: {{ include "minio.priorityClassResourceName" . }}
+value: {{ .Values.priorityClassValue }}
+globalDefault: false
+description: "This priority class is used for MinIO pods."
+{{- end }}

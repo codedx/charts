@@ -55,8 +55,8 @@ spec:
       {{- if .Values.topologySpreadConstraints }}
       topologySpreadConstraints: {{- include "common.tplvalues.render" (dict "value" .Values.topologySpreadConstraints "context" $) | nindent 8 }}
       {{- end }}
-      {{- if .Values.priorityClassName }}
-      priorityClassName: {{ .Values.priorityClassName | quote }}
+      {{- if (include "minio.priorityClassName" .) }}
+      priorityClassName: {{ include "minio.priorityClassName" . | quote }}
       {{- end }}
       {{- if .Values.runtimeClassName }}
       runtimeClassName: {{ .Values.runtimeClassName | quote }}
@@ -254,6 +254,11 @@ spec:
         - name: minio-credentials
           secret:
             secretName: {{ include "minio.secretName" . }}
+            items:
+            - key: {{ include "minio.rootUserKey" . }}
+              path: root-user
+            - key: {{ include "minio.rootPasswordKey" . }}
+              path: root-password
         {{- end }}
         - name: data
           {{- if .Values.persistence.enabled }}

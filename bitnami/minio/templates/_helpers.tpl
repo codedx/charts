@@ -258,3 +258,15 @@ Return the api ingress hostname
 {{- define "minio.apiIngress.hostname" -}}
 {{- tpl .Values.apiIngress.hostname $ -}}
 {{- end -}}
+
+{{- define "minio.priorityClassName" -}}
+{{- if (eq (toString .Values.priorityClassValue) "0") -}}
+    {{- .Values.priorityClassName -}}
+{{- else -}}
+    {{- include "minio.priorityClassResourceName" . -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "minio.priorityClassResourceName" -}}
+{{- printf "%s-%s" (include "common.names.fullname" .) "pc" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
